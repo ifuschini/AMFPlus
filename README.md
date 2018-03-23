@@ -13,5 +13,7 @@ that's it all!!!!
 
 Enjoy with AMF+
 
+For more info: http://www.apachemobilefilter.org
+
 Copyrights (c) 2009-2018 apachemobilefilter.org, All Rights Reserved
 
