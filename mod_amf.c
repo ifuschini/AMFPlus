@@ -51,14 +51,13 @@
 #define BUFFER_SIZE 1024
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
-#define AMF_VERSION "1.3.2.2"
+#define AMF_VERSION "1.4.0.0"
 
-#define AMF_HOST "sourceforge.net"
-
-#define ISMOBILE_URL "/projects/mobilefilter/files/AMFPlusRepository/litemobiledetectionPlus.config/download"
-#define ISTABLET_URL "/projects/mobilefilter/files/AMFPlusRepository/litetabletdetectionPlus.config/download"
-#define ISTOUCH_URL  "/projects/mobilefilter/files/AMFPlusRepository/litetouchdetectionPlus.config/download"
-#define ISTV_URL  "/projects/mobilefilter/files/AMFPlusRepository/litetvdetectionPlus.config/download"
+#define AMF_HOST "github.com"
+#define ISMOBILE_URL "/ifuschini/AMFPlus/blob/master/repository/litemobiledetectionPlus.config"
+#define ISTABLET_URL "/ifuschini/AMFPlus/blob/master/repository/litetabletdetectionPlus.config"
+#define ISTOUCH_URL  "/ifuschini/AMFPlus/blob/master/repository/litetouchdetectionPlus.config"
+#define ISTV_URL  "/ifuschini/AMFPlus/blob/master/repository/litetvdetectionPlus.config"
 #define IS_MOBILE 0
 #define IS_TABLET 1
 #define IS_TOUCH 2
@@ -302,7 +301,7 @@ int downloadFile (char *host,char *URI, char fileName[]) {
   CURLcode res;
   char url[BUFFER_SIZE];
   char tmpFile[BUFFER_SIZE];
-  sprintf(url,"http://%s%s",host,URI);
+  sprintf(url,"https://%s%s",host,URI);
   sprintf(tmpFile,"%s.tmp",fileName);
   curl_easy_setopt( handle, CURLOPT_URL, url ) ;
   FILE* fp = fopen( tmpFile, "w");
