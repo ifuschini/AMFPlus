@@ -1,0 +1,7 @@
+
+compile_for_me.sh
+.libs/mod_amf.a
+*.la
+*.lai
+*.so
+*.komodoproject
