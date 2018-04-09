@@ -28,11 +28,19 @@ do
             if [ $? -eq 0 ]; then
                 echo "Libcurl Version is $CURL_VERSION"
                 cp mod_amf.tmpl mod_amf.h
-                sudo $apxs -c -a -i mod_amf.c -lcurl
+                RUN_SUDO=$(sudo $apxs -c -a -i mod_amf.c -lcurl)
+                if [ ${RUN_SUDO} -eq 0 ]
+                then
+                    $apxs -c -a -i mod_amf.c -lcurl
+                fi
             else
                 echo "Libcurl not found"
                 grep -v "#define CURL_SUPPORT" mod_amf.tmpl > mod_amf.h
-                sudo $apxs -c -a -i mod_amf.c
+                RUN_SUDO=$(sudo $apxs -c -a -i mod_amf.c)
+                if [ ${RUN_SUDO} -eq 0 ]
+                then
+                    $apxs -c -a -i mod_amf.c
+                fi
                 echo "Remember you mus configure manually in your httpd.conf this parameters downloadable from (https://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/):"
                 echo
                 echo "AMFmobile from litemobiledetectionPlus.config file"
