@@ -8,7 +8,7 @@ Installation is very simple:
 
 2. As root, run the install script: `. ./install.sh`. Note that if you have `apxs` installed in a non-standard directory (i.e. `/opt` as used by Red Hat Software Collections) you will need to manually enter the path.
 
-3. Update your Apache configuration with the path to the AMF config files (see [https://github.com/ifuschini/AMFPlus/wiki/mod_amf](mod_amf)).
+3. Update your Apache configuration with the path to the AMF config files.
 
 4. Restart Apache: `apachectl restart`
 
