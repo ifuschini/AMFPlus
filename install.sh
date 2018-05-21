@@ -39,7 +39,7 @@ do
             if [ ${RUN_SUDO} -eq 0 ]; then
                 $apxs -c -a -i mod_amf.c
             fi
-            echo "Remember you must manually configure your httpd.conf with these parameters (downloadable from https://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/):"
+            echo "Remember you must manually update the configuration files (downloadable from https://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/):"
             echo
             echo "AMFmobile from litemobiledetectionPlus.config file"
             echo
@@ -49,11 +49,12 @@ do
             echo
             echo "AMFtv from litetvdetectionPlus.config file"
             echo
-            echo "If you don't wont to configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. AMF will update automatically every time."
+            echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. AMF will update automatically every time."
         fi
         var=1
     else
         echo "File does not exist: $apxs\n\nPlease try again!\n"
         var=0
     fi
+    echo "Remember to update your httpd.conf with the AMFHome parameter:\nAMFHome /your/preferred/path/to/amf/config/files"
 done
