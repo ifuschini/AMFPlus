@@ -50,11 +50,15 @@ do
             echo "AMFtv from litetvdetectionPlus.config file"
             echo
             echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf and AMF will update automatically every time."
+            echo
         fi
         var=1
     else
-        echo "File does not exist: $apxs\n\nPlease try again!\n"
+        echo "File does not exist: $apxs"
+        echo "Please try again!"
+        echo
         var=0
     fi
-    echo "Remember to update your httpd.conf with the AMFHome parameter:\nAMFHome /your/preferred/path/to/amf/config/files"
+    echo "Remember to update your httpd.conf with the AMFHome parameter:"
+    echo "AMFHome /your/preferred/path/to/amf/config/files"
 done
