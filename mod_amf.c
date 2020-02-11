@@ -88,6 +88,7 @@ int setDownloadParam=0;
 int first=0;
 int AMFOn=0;
 int AMFLog=1;
+int AMFReadConfigFile=0;
 int AMFProduction=0;
 
 char *isMobileString, *isTabletString, *isTouchString, *isTVString;
@@ -147,6 +148,10 @@ static int handlerAMF(request_rec* r)
                     x_operamini_phone_ua = apr_table_get(r->headers_in, "X-OperaMini-Phone-Ua");
                     x_operamini_ua = apr_table_get(r->headers_in, "X-OperaMini-Ua");
                     x_ch_ua = apr_table_get(r->headers_in, "Sec-Ch-UA");
+                    x_ch_ua_arch = apr_table_get(r->headers_in, "Sec-Ch-UA-Arch");
+                    x_ch_ua_model = apr_table_get(r->headers_in, "Sec-Ch-UA-Model");
+                    x_ch_ua_platform = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform");
+
                     n++;
                 }
                 // verify for opera mini browser
@@ -209,6 +214,9 @@ static int handlerAMF(request_rec* r)
         apr_table_setn(e, "AMF_BROWSER_TYPE", params[BROWSER_TYPE]);
         apr_table_setn(e, "AMF_BROWSER_VERSION", params[BROWSER_VERSION]);
         apr_table_setn(e, "AMF_CH_UA", x_ch_ua);
+        apr_table_setn(e, "AMF_CH_UA_ARCH", x_ch_ua_arch);
+        apr_table_setn(e, "AMF_CH_UA_MODEL", x_ch_ua_model);
+        apr_table_setn(e, "AMF_CH_UA_PLATFORM", x_ch_ua_platform);
         apr_table_setn(e, "AMF_VER", AMF_VERSION);
         if (setFullBrowser==1) {
             if (r->args) {
@@ -700,18 +708,23 @@ char* readFile(char *nameFile, char *type) {
     size_t len = 0;
     ssize_t read;
     char dummy[MAX_SIZE];
-    fp = fopen(nameFile, "r");
-    if (fp == NULL) {
+    size_t size = strlen(dummy) + 1;
+    if (AMFReadConfigFile == 1)
+    {
+        fp = fopen(nameFile, "r");
+        if (fp == NULL) {
+            if (AMFLog==1)
+                printf("I couldn't open %s for reading.\n",nameFile );
+                exit(1);
+        } else {
+            while((read = getline(&line, &len, fp)) != -1) {
+                sprintf(dummy,"%s", line);
+            }
+        }
         if (AMFLog==1)
-            printf("I couldn't open %s for reading.\n",nameFile );
-        exit(1);
+            printf("Configuration for %s device loaded correctly\n",type);
+        size = strlen(dummy) + 1;
     }
-    while((read = getline(&line, &len, fp)) != -1) {
-        sprintf(dummy,"%s", line);
-    } 
-    size_t size=strlen(dummy) + 1;
-    if (AMFLog==1)
-        printf("Configuration for %s device loaded correctly\n",type);
     return strndup(dummy, size);
 }
 
@@ -863,6 +876,12 @@ static const char *set_amflog(cmd_parms *parms, void *dummy, int flag)
     AMFLog=flag;
     return NULL;
 }
+static const char *set_amfReadConfigFile(cmd_parms *parms, void *dummy, int flag)
+{
+    AMFReadConfigFile = flag;
+    return NULL;
+}
+ 
 static const char *set_amfproduction(cmd_parms *parms, void *dummy, int flag)
 {
     AMFProduction=flag;
@@ -980,8 +999,8 @@ static void register_hooks(apr_pool_t *p)
 
 }
 #pragma mark commands directive
-static const command_rec amf_cmds [] = {
-	/*
+static const command_rec amf_cmds[] = {
+    /*
 	 *RSRC_CONF - httpd.conf at top level or in a VirtualHost context. All directives using server config should use this, as other contexts are meaningless for a server config.
     ACCESS_CONF - httpd.conf in a Directory context. This is appropriate to per-dir config directives for a server administrator only, and is often combined (using OR) with RSRC_CONF to allow its use anywhere within httpd.conf.
     OR_LIMIT, OR_OPTIONS, OR_FILEINFO, OR_AUTHCFG, OR_INDEXES - extend to allow use of the directive in .htaccess according to AllowOverride setting.
@@ -990,6 +1009,8 @@ static const command_rec amf_cmds [] = {
                  RSRC_CONF, "Define for activate AMF"),
     AP_INIT_FLAG("AMFLog", set_amflog, NULL,
                  RSRC_CONF, "Define for log for AMF"),
+    AP_INIT_FLAG("AMFReadConfigFile", set_amfReadConfigFile, NULL,
+                 RSRC_CONF, "Define read configuration file or parameters for AMF"),
     AP_INIT_FLAG("AMFProduction", set_amfproduction, NULL,
                  RSRC_CONF, "Define if is AMF is set for production environment (increase pereformance)"),
     AP_INIT_TAKE1("AMFHome", set_homeDir, NULL,
@@ -1000,24 +1021,23 @@ static const command_rec amf_cmds [] = {
                   RSRC_CONF, "Define the accesskey for your fullbrowser"),
 #ifdef CURL_SUPPORT
     AP_INIT_TAKE1("AMFProxy", set_proxy, NULL,
-                 RSRC_CONF, "Define proxy for download repository"),
+                  RSRC_CONF, "Define proxy for download repository"),
     AP_INIT_TAKE1("AMFProxyUsr", set_proxy_usr, NULL,
-                 RSRC_CONF, "Define proxy username for download repository"),
+                  RSRC_CONF, "Define proxy username for download repository"),
     AP_INIT_TAKE1("AMFProxyPwd", set_proxy_pwd, NULL,
-                 RSRC_CONF, "Define proxy password for download repository"),
+                  RSRC_CONF, "Define proxy password for download repository"),
     AP_INIT_FLAG("AMFDownloadParam", set_downloadParam, NULL,
                  RSRC_CONF, "Define if you want to download param"),
 #endif
     AP_INIT_TAKE1("AMFmobile", set_mobile, NULL,
-                 RSRC_CONF, "Define mobile param"),
+                  RSRC_CONF, "Define mobile param"),
     AP_INIT_TAKE1("AMFtouch", set_touch, NULL,
-                 RSRC_CONF, "Define touch param"),
+                  RSRC_CONF, "Define touch param"),
     AP_INIT_TAKE1("AMFtablet", set_tablet, NULL,
-                 RSRC_CONF, "Define tablet  param"),
+                  RSRC_CONF, "Define tablet  param"),
     AP_INIT_TAKE1("AMFtv", set_tv, NULL,
-                 RSRC_CONF, "Define tv  param"),
-    {NULL}
-};
+                  RSRC_CONF, "Define tv  param"),
+    {NULL}};
 
 
 
