@@ -1,5 +1,5 @@
 //mod_amf.h is module for Apache httpd web server for detect mobile devices
-//Copyright (C) 2009-2010-2011-2012-2013-2014-2015  Idel Fuschini
+//Copyright (C) 2009-2020  Idel Fuschini
 //
 //
 //This program is free software: you can redistribute it and/or modify
@@ -30,33 +30,32 @@
 
 #define CURL_SUPPORT 1
 
-struct browserTypeVersion{
+struct browserTypeVersion
+{
     char *type;
     char *version;
 };
 
-
-int compare (char *string, char *userAgent);
-int checkIsMobile (char *userAgent);
-int checkIsTablet (char *userAgent);
-int checkIsTouch (char *userAgent);
-int checkIsTV (char *userAgent);
-int checkQueryStringIsFull (char *queryString);
+int compare(char *string, char *userAgent);
+int checkIsMobile(char *userAgent);
+int checkIsTablet(char *userAgent);
+int checkIsTouch(char *userAgent);
+int checkIsTV(char *userAgent);
+int checkQueryStringIsFull(char *queryString);
 int get_cookie_param(request_rec *r);
 char *get_cookie_device_param(request_rec *r);
-int socket_connect(char *host, in_port_t port,int check);
+int socket_connect(char *host, in_port_t port, int check);
 #ifdef CURL_SUPPORT
-int downloadFile (char *host,char *URI, char fileName[]);
+int downloadFile(char *host, char *URI, char fileName[]);
 #endif
 //int socket_connect(char *host, in_port_t port);
 //char *downloadFile (char *URI, char fileName[]);
 void loadParameters(int flag);
-char* getOperativeSystem (char *useragent);
-char* getOperativeSystemDesktop (char *useragent);
-char* getOperativeSystemVersion (char *useragent, char *os);
-struct browserTypeVersion getBrowserVersion (char *useragent);
-char* substring(const char* str, size_t begin, size_t len);
-char *match_regex_string (regex_t * r, const char * to_match,int matchOS);
-
+char *getOperativeSystem(char *useragent);
+char *getOperativeSystemDesktop(char *useragent);
+char *getOperativeSystemVersion(char *useragent, char *os);
+struct browserTypeVersion getBrowserVersion(char *useragent);
+char *substring(const char *str, size_t begin, size_t len);
+char *match_regex_string(regex_t *r, const char *to_match, int matchOS);
 
 #endif

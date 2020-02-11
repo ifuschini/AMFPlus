@@ -1,5 +1,5 @@
 //mod_amf.c is module for Apache httpd web server for detect mobile devices
-//Copyright (C) 2009-2010-2011-2012-2013-2014-2015  Idel Fuschini
+//Copyright (C) 2009-2020,  Idel Fuschini
 //
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU Affero General Public License as
@@ -51,7 +51,7 @@
 #define BUFFER_SIZE 1024
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
-#define AMF_VERSION "1.4.0.0"
+#define AMF_VERSION "1.5.0.0"
 
 #define AMF_HOST "github.com"
 #define ISMOBILE_URL "/ifuschini/AMFPlus/blob/master/repository/litemobiledetectionPlus.config"
@@ -115,7 +115,11 @@ static int handlerAMF(request_rec* r)
         const char *x_operamini_phone_ua = NULL;
         const char *x_operamini_ua = NULL;
         const char *x_user_agent = NULL;
-        int foundParam=0;
+        const char *x_ch_ua = NULL;
+        const char *x_ch_ua_arch = NULL;
+        const char *x_ch_ua_model = NULL;
+        const char *x_ch_ua_platform = NULL;
+        int foundParam = 0;
         int n=0;
         if (AMFProduction == 1) {
             char *cookieParam;
@@ -142,6 +146,7 @@ static int handlerAMF(request_rec* r)
                     userAgent = apr_table_get(r->headers_in, "User-Agent");
                     x_operamini_phone_ua = apr_table_get(r->headers_in, "X-OperaMini-Phone-Ua");
                     x_operamini_ua = apr_table_get(r->headers_in, "X-OperaMini-Ua");
+                    x_ch_ua = apr_table_get(r->headers_in, "Sec-Ch-UA");
                     n++;
                 }
                 // verify for opera mini browser
@@ -203,7 +208,8 @@ static int handlerAMF(request_rec* r)
         apr_table_setn(e, "AMF_DEVICE_OS_VERSION", params[OPERATIVE_SYSTEM_VERSION]);
         apr_table_setn(e, "AMF_BROWSER_TYPE", params[BROWSER_TYPE]);
         apr_table_setn(e, "AMF_BROWSER_VERSION", params[BROWSER_VERSION]);
-        apr_table_setn(e, "AMF_VER",AMF_VERSION);
+        apr_table_setn(e, "AMF_CH_UA", x_ch_ua);
+        apr_table_setn(e, "AMF_VER", AMF_VERSION);
         if (setFullBrowser==1) {
             if (r->args) {
                 if (checkQueryStringIsFull (r->args)==1) {
