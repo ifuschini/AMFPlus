@@ -4,4 +4,7 @@ compile_for_me.sh
 *.la
 *.lai
 *.so
+*.o
+*.slo
+*.lo
 *.komodoproject
