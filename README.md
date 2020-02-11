@@ -2,6 +2,8 @@
 
 Welcome to the Apache Mobile Filter Plus - the fastest mobile detection.
 
+Compatible with UA-CH specific  https://wicg.github.io/ua-client-hints/
+
 Installation is very simple:
 
 1. Install gcc, Apache Webserver 2.0.x/2.2.x/2.4.x or newer and Apache Extensions Tool (APXS, included in `httpd-devel`) (downloadable from http://httpd.apache.org). `libcurl` is also recommended.
@@ -18,5 +20,5 @@ Enjoy AMF+
 
 For more info: http://www.apachemobilefilter.org
 
-Copyrights (c) 2009-2018 apachemobilefilter.org, All Rights Reserved
+Copyrights (c) 2009-2020 apachemobilefilter.org, All Rights Reserved
 
