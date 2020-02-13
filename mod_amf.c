@@ -120,6 +120,7 @@ static int handlerAMF(request_rec* r)
         const char *x_ch_ua_arch = NULL;
         const char *x_ch_ua_model = NULL;
         const char *x_ch_ua_platform = NULL;
+        const char *x_ch_ua_mobile = NULL;
         int foundParam = 0;
         int n=0;
         if (AMFProduction == 1) {
@@ -151,13 +152,13 @@ static int handlerAMF(request_rec* r)
                     x_ch_ua_arch = apr_table_get(r->headers_in, "Sec-Ch-UA-Arch");
                     x_ch_ua_model = apr_table_get(r->headers_in, "Sec-Ch-UA-Model");
                     x_ch_ua_platform = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform");
-
+                    x_ch_ua_mobile = apr_table_get(r->headers_in, "Sec-Ch-UA-Mobile");
                     n++;
                 }
                 // verify for opera mini browser
                 char user_agent[strlen(apr_table_get(r->headers_in,"User-Agent"))];
-                strcpy(user_agent,apr_table_get(r->headers_in,"User-Agent"));
-                if (x_user_agent) {
+                strcpy(user_agent, apr_table_get(r->headers_in, "User-Agent"));
+               if (x_user_agent) {
                     strcpy(user_agent,x_user_agent);
                 }
                 if (x_operamini_phone_ua) {
@@ -170,30 +171,36 @@ static int handlerAMF(request_rec* r)
                     i++;
                 }     
                 //ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL, "ua: %s", string);
-                if (checkIsMobile(user_agent)==1) {
+                if (checkIsMobile(user_agent, x_ch_ua_mobile) == 1)
+                {
                     params[IS_MOBILE]="true";
-                    if (checkIsTablet(user_agent)==1) {
+                    if (checkIsTablet(user_agent, x_ch_ua_model) == 1)
+                    {
                         params[IS_TABLET]="true";
                     }
                     if (checkIsTouch(user_agent)==1) {
                         params[IS_TOUCH]="true";
                     }
-                    params[OPERATIVE_SYSTEM]=getOperativeSystem(user_agent);
-                    params[OPERATIVE_SYSTEM_VERSION]=getOperativeSystemVersion(user_agent,(char *)params[OPERATIVE_SYSTEM]);
+                    params[OPERATIVE_SYSTEM] = getOperativeSystem(user_agent, x_ch_ua_platform);
+                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(user_agent, (char *)params[OPERATIVE_SYSTEM], x_ch_ua_platform);
                 } else {
                     if (checkIsTV(user_agent)==1) {
                         params[IS_TV]="true";
                     } else {
                         params[IS_DESKTOP]="true";
-                        params[OPERATIVE_SYSTEM]=getOperativeSystemDesktop(user_agent);
-                        params[OPERATIVE_SYSTEM_VERSION]=getOperativeSystemVersion(user_agent,(char *)params[OPERATIVE_SYSTEM]);
+                        params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(user_agent, x_ch_ua_platform);
+                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(user_agent, (char *)params[OPERATIVE_SYSTEM], x_ch_ua_platform);
                     } 
                 }
                 struct browserTypeVersion browser=getBrowserVersion(user_agent);
                 
                 params[BROWSER_TYPE]=browser.type;
                 params[BROWSER_VERSION]=browser.version;
-             
+                
+                /*if (strcmp("?0", x_ch_ua_mobile) == 0)
+                {
+                    value_ch_ua_mobile = "false";
+                }*/
             }
             if (AMFProduction==1) {
                 char stringCookie[MAX_SIZE];
@@ -217,6 +224,7 @@ static int handlerAMF(request_rec* r)
         apr_table_setn(e, "AMF_CH_UA_ARCH", x_ch_ua_arch);
         apr_table_setn(e, "AMF_CH_UA_MODEL", x_ch_ua_model);
         apr_table_setn(e, "AMF_CH_UA_PLATFORM", x_ch_ua_platform);
+        apr_table_setn(e, "AMF_CH_UA_MOBILE", x_ch_ua_mobile);
         apr_table_setn(e, "AMF_VER", AMF_VERSION);
         if (setFullBrowser==1) {
             if (r->args) {
@@ -423,30 +431,36 @@ int checkQueryStringIsFull (char *queryString) {
     }
     return returnValue;
 }
-int checkIsMobile (char *userAgent) {
+int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
+{
     int returnValue=0;
-    char * pch;
-    char * stringApp=NULL;
-    char * copy = malloc(strlen(isMobileString) + 1);
-    strcpy(copy, isMobileString);
-    pch = strtok (copy,",");
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, userAgent)==0) {
-                regfree (& r);
-				returnValue=1;
-				break;
+    if (ch_ua_mobile == NULL) {
+        char * pch;
+        char * stringApp=NULL;
+        char * copy = malloc(strlen(isMobileString) + 1);
+        strcpy(copy, isMobileString);
+        pch = strtok (copy,",");
+        while (pch != NULL)
+        {
+            regex_t r;
+            if (compile_regex(& r, pch)==0) {
+                if (match_regex(& r, userAgent)==0) {
+                    regfree (& r);
+                    returnValue=1;
+                    break;
+                }
             }
+            regfree (& r);
+            pch = strtok (NULL, ",");
         }
-        regfree (& r);
-        pch = strtok (NULL, ",");
+        copy=NULL;
+        pch=NULL;
+        free(copy);
+        free(pch);
+    } else {
+        if (strcmp("?1",ch_ua_mobile) == 0)
+            returnValue=1;
     }
-	copy=NULL;
-	pch=NULL;
-	free(copy);
-    free(pch);     
     return returnValue;
 }
 int checkIsTouch (char *userAgent) {
@@ -475,7 +489,8 @@ int checkIsTouch (char *userAgent) {
     return returnValue;
 }
 
-int checkIsTablet (char *userAgent) {
+int checkIsTablet(char *userAgent, const char *ch_ua_tablet)
+{
     int returnValue=0;
     char * pch;
     char * copy = malloc(strlen(isTabletString) + 1);
@@ -550,7 +565,8 @@ int compare (char *stringToSearch, char *userAgentSearch) {
     return returnValue;
 }
 #pragma mark get mobile OS
-struct browserTypeVersion getBrowserVersion (char *useragent) {
+struct browserTypeVersion getBrowserVersion(char *useragent)
+{
     struct browserTypeVersion browser;
     char pch[MAX_SIZE];
     sprintf(pch,REGEX_BROWSER_TYPE);
@@ -574,7 +590,8 @@ struct browserTypeVersion getBrowserVersion (char *useragent) {
     return browser;
 
 }
-char* getOperativeSystemVersion (char *useragent, char *os) {
+char *getOperativeSystemVersion(char *useragent, char *os, const char *ch_ua_platform)
+{
     char returnValue[MAX_SIZE];
     sprintf(returnValue, "nc");
     char pch[MAX_SIZE];
@@ -636,7 +653,8 @@ char* get_cookie_device_param(request_rec *r)
     return strndup(returnValue, size);
 
 }
-char* getOperativeSystem (char *useragent) {
+char *getOperativeSystem(char *useragent, const char *ch_ua_platform)
+{
     //Android ([0-9]\.[0-9](\.[0-9])?)
     char returnValue[MAX_SIZE];
     char ostypes[MAX_SIZE]="android,iphone|ipad|ipod,windows phone,symbianos,blackberry,kindle";
@@ -672,7 +690,8 @@ char* getOperativeSystem (char *useragent) {
     size_t size=strlen(returnValue) + 1;
     return strndup(returnValue, size);
 }
-char* getOperativeSystemDesktop (char *useragent) {
+char *getOperativeSystemDesktop(char *useragent, const char *ch_ua_platform)
+{
     //Android ([0-9]\.[0-9](\.[0-9])?)
     char returnValue[MAX_SIZE];
     char ostypes[MAX_SIZE]="windows,mac,linux";

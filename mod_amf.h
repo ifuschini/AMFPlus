@@ -37,8 +37,8 @@ struct browserTypeVersion
 };
 
 int compare(char *string, char *userAgent);
-int checkIsMobile(char *userAgent);
-int checkIsTablet(char *userAgent);
+int checkIsMobile(char *userAgent, const char *ch_ua_mobile);
+int checkIsTablet(char *userAgent, const char *ch_ua_tablet);
 int checkIsTouch(char *userAgent);
 int checkIsTV(char *userAgent);
 int checkQueryStringIsFull(char *queryString);
@@ -51,9 +51,9 @@ int downloadFile(char *host, char *URI, char fileName[]);
 //int socket_connect(char *host, in_port_t port);
 //char *downloadFile (char *URI, char fileName[]);
 void loadParameters(int flag);
-char *getOperativeSystem(char *useragent);
-char *getOperativeSystemDesktop(char *useragent);
-char *getOperativeSystemVersion(char *useragent, char *os);
+char *getOperativeSystem(char *useragent, const char *ch_ua_platform);
+char *getOperativeSystemDesktop(char *useragent,const char *ch_ua_platform);
+char *getOperativeSystemVersion(char *useragent, char *os,const char *ch_ua_platform);
 struct browserTypeVersion getBrowserVersion(char *useragent);
 char *substring(const char *str, size_t begin, size_t len);
 char *match_regex_string(regex_t *r, const char *to_match, int matchOS);
