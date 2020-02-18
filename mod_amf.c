@@ -1014,8 +1014,8 @@ static void register_hooks(apr_pool_t *p)
 {
     /* make sure we run before mod_rewrite's handler */
     static const char * const aszSucc[] = {"mod_setenvif.c", "mod_rewrite.c", NULL };
-    ap_hook_header_parser(amf_per_dir, NULL, aszSucc, APR_HOOK_FIRST);
-
+    ap_hook_header_parser(amf_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
+    ap_hook_post_read_request(amf_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
 }
 #pragma mark commands directive
 static const command_rec amf_cmds[] = {
