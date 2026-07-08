@@ -30,7 +30,9 @@
 #ifndef _mod_amf_h
 #define _mod_amf_h
 
+#ifndef AMF_NO_CURL_SUPPORT
 #define CURL_SUPPORT 1
+#endif
 
 struct browserTypeVersion
 {
@@ -41,24 +43,20 @@ struct browserTypeVersion
 int compare(const char *string, const char *userAgent);
 int compile_regex(regex_t *r, const char *regex_text);
 int checkIsMobile(char *userAgent, const char *ch_ua_mobile);
-int checkIsTablet(char *userAgent, const char *ch_ua_tablet);
+int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile);
 int checkIsTouch(char *userAgent);
 int checkIsTV(char *userAgent);
 int checkQueryStringIsFull(const char *queryString);
 int get_cookie_param(request_rec *r);
 char *get_cookie_device_param(request_rec *r);
-int socket_connect(char *host, in_port_t port, int check);
 #ifdef CURL_SUPPORT
 int downloadFile(char *host, char *URI, char fileName[]);
 #endif
-//int socket_connect(char *host, in_port_t port);
-//char *downloadFile (char *URI, char fileName[]);
 void loadParameters(int flag);
 char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_platform);
 char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent,const char *ch_ua_platform);
-char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os,const char *ch_ua_platform);
+char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os,const char *ch_ua_platform_version);
 struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent);
-char *substring(const char *str, size_t begin, size_t len);
 int match_regex(regex_t *r, const char *to_match);
 char *match_regex_string(apr_pool_t *pool, regex_t *r, const char *to_match, int matchOS);
 

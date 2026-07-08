@@ -7,6 +7,9 @@ on:
 jobs:
   apache-module:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        curl_support: [enabled, disabled]
 
     steps:
       - name: Checkout
@@ -18,4 +21,8 @@ jobs:
       - name: Compile mod_amf
         run: |
           APXS="$(command -v apxs || command -v apxs2)"
-          "$APXS" -c -Wc,-Wall mod_amf.c -lcurl
+          if [ "${{ matrix.curl_support }}" = "enabled" ]; then
+            "$APXS" -c -Wc,-Wall mod_amf.c -lcurl
+          else
+            "$APXS" -c -Wc,-Wall -Wc,-DAMF_NO_CURL_SUPPORT mod_amf.c
+          fi

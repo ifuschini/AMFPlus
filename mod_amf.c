@@ -28,19 +28,12 @@
 
 #include "mod_amf.h"
 #include <ctype.h>
-#include <fcntl.h>
 #include <httpd.h>
 #include <http_config.h>
 #include <http_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
 #ifdef CURL_SUPPORT
 #include <curl/curl.h>
 #endif
@@ -52,7 +45,7 @@
 #define BUFFER_SIZE 1024
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
-#define AMF_VERSION "1.5.0.0"
+#define AMF_VERSION "2.0.0"
 
 #define AMF_HOST "raw.githubusercontent.com"
 #define ISMOBILE_URL "/ifuschini/AMFPlus/master/repository/litemobiledetectionPlus.config"
@@ -88,19 +81,27 @@ int setDownloadParam=1;
 #else
 int setDownloadParam=0;
 #endif 
-int first=0;
 int AMFOn=0;
 int AMFLog=1;
-int AMFReadConfigFile=0;
 int AMFProduction=0;
 
 char *isMobileString=NULL, *isTabletString=NULL, *isTouchString=NULL, *isTVString=NULL;
 char *ProxyUrl=NULL;
 char *ProxyUsr=NULL;
 char *ProxyPwd=NULL;
-char *hostName, *checkHostString;
 char KeyFullBrowser[MAX_SIZE];
 char HomeDir[MAX_SIZE];
+
+struct regexCache
+{
+    regex_t *items;
+    int count;
+};
+
+static struct regexCache isMobileRegexCache={NULL,0};
+static struct regexCache isTabletRegexCache={NULL,0};
+static struct regexCache isTouchRegexCache={NULL,0};
+static struct regexCache isTVRegexCache={NULL,0};
 
 static const char *amf_value_or_nc(const char *value)
 {
@@ -128,13 +129,30 @@ static char *trim_token(char *value)
     return value;
 }
 
-static int match_regex_list(const char *regexList, const char *userAgent)
+static void clear_regex_cache(struct regexCache *cache)
+{
+    int i;
+
+    if (cache == NULL || cache->items == NULL) {
+        return;
+    }
+
+    for (i = 0; i < cache->count; i++) {
+        regfree(&cache->items[i]);
+    }
+    free(cache->items);
+    cache->items = NULL;
+    cache->count = 0;
+}
+
+static int count_regex_tokens(const char *regexList)
 {
     char *copy;
     char *last = NULL;
     char *token;
+    int count = 0;
 
-    if (regexList == NULL || userAgent == NULL || *regexList == '\0') {
+    if (regexList == NULL || *regexList == '\0') {
         return 0;
     }
 
@@ -145,22 +163,142 @@ static int match_regex_list(const char *regexList, const char *userAgent)
 
     token = apr_strtok(copy, ",", &last);
     while (token != NULL) {
-        regex_t r;
         char *regexText = trim_token(token);
 
-        if (*regexText != '\0' && compile_regex(&r, regexText) == 0) {
-            int matched = match_regex(&r, userAgent) == 0;
-            regfree(&r);
-            if (matched) {
-                free(copy);
-                return 1;
-            }
+        if (*regexText != '\0') {
+            count++;
         }
         token = apr_strtok(NULL, ",", &last);
     }
 
     free(copy);
+    return count;
+}
+
+static void compile_regex_cache(struct regexCache *cache, const char *regexList)
+{
+    char *copy;
+    char *last = NULL;
+    char *token;
+    int capacity;
+
+    clear_regex_cache(cache);
+    capacity = count_regex_tokens(regexList);
+    if (capacity == 0) {
+        return;
+    }
+
+    cache->items = calloc((size_t)capacity, sizeof(regex_t));
+    if (cache->items == NULL) {
+        return;
+    }
+
+    copy = strdup(regexList);
+    if (copy == NULL) {
+        clear_regex_cache(cache);
+        return;
+    }
+
+    token = apr_strtok(copy, ",", &last);
+    while (token != NULL && cache->count < capacity) {
+        char *regexText = trim_token(token);
+
+        if (*regexText != '\0' && compile_regex(&cache->items[cache->count], regexText) == 0) {
+            cache->count++;
+        }
+        token = apr_strtok(NULL, ",", &last);
+    }
+
+    free(copy);
+}
+
+static int match_regex_cache(const struct regexCache *cache, const char *userAgent)
+{
+    int i;
+
+    if (cache == NULL || userAgent == NULL) {
+        return 0;
+    }
+
+    for (i = 0; i < cache->count; i++) {
+        if (match_regex((regex_t *)&cache->items[i], userAgent) == 0) {
+            return 1;
+        }
+    }
     return 0;
+}
+
+static const char *trim_client_hint(apr_pool_t *pool, const char *value)
+{
+    const char *start;
+    const char *end;
+    char *normalized;
+    char *cursor;
+
+    if (pool == NULL || value == NULL) {
+        return NULL;
+    }
+
+    start = value;
+    while (*start && isspace((unsigned char)*start)) {
+        start++;
+    }
+
+    end = start + strlen(start);
+    while (end > start && isspace((unsigned char)*(end - 1))) {
+        end--;
+    }
+
+    if (end - start >= 2 && *start == '"' && *(end - 1) == '"') {
+        start++;
+        end--;
+    }
+
+    if (end <= start) {
+        return NULL;
+    }
+
+    normalized = apr_pstrndup(pool, start, end - start);
+    for (cursor = normalized; *cursor != '\0'; cursor++) {
+        *cursor = (char)tolower((unsigned char)*cursor);
+    }
+    return normalized;
+}
+
+static int client_hint_equals(const char *value, const char *expected)
+{
+    while (value != NULL && *value && isspace((unsigned char)*value)) {
+        value++;
+    }
+    if (value != NULL && *value == '"') {
+        value++;
+    }
+
+    while (value != NULL && *value && *value != '"') {
+        if (tolower((unsigned char)*value) != tolower((unsigned char)*expected)) {
+            return 0;
+        }
+        value++;
+        expected++;
+    }
+
+    return value != NULL && *expected == '\0';
+}
+
+static int client_hint_has_value(const char *value)
+{
+    while (value != NULL && *value && isspace((unsigned char)*value)) {
+        value++;
+    }
+    if (value != NULL && *value == '"') {
+        value++;
+    }
+    return value != NULL && *value != '\0' && *value != '"';
+}
+
+static int client_hint_mobile_true(const char *value)
+{
+    return value != NULL && strcmp(value, "?1") == 0;
 }
 #pragma mark handler
 static int handlerAMF(request_rec* r)
@@ -185,6 +323,7 @@ static int handlerAMF(request_rec* r)
         const char *x_ch_ua_arch = NULL;
         const char *x_ch_ua_model = NULL;
         const char *x_ch_ua_platform = NULL;
+        const char *x_ch_ua_platform_version = NULL;
         const char *x_ch_ua_mobile = NULL;
         int foundParam = 0;
         if (AMFProduction == 1) {
@@ -215,6 +354,7 @@ static int handlerAMF(request_rec* r)
                 x_ch_ua_arch = apr_table_get(r->headers_in, "Sec-Ch-UA-Arch");
                 x_ch_ua_model = apr_table_get(r->headers_in, "Sec-Ch-UA-Model");
                 x_ch_ua_platform = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform");
+                x_ch_ua_platform_version = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform-Version");
                 x_ch_ua_mobile = apr_table_get(r->headers_in, "Sec-Ch-UA-Mobile");
             }
 
@@ -222,6 +362,8 @@ static int handlerAMF(request_rec* r)
                 const char *source_user_agent = userAgent;
                 char *user_agent;
                 char *cursor;
+                int isTablet;
+                int isMobile;
 
                 if (x_user_agent != NULL) {
                     source_user_agent = x_user_agent;
@@ -239,10 +381,12 @@ static int handlerAMF(request_rec* r)
                 }
 
                 //ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL, "ua: %s", string);
-                if (checkIsMobile(user_agent, x_ch_ua_mobile) == 1)
+                isTablet = checkIsTablet(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile);
+                isMobile = checkIsMobile(user_agent, x_ch_ua_mobile) == 1 || isTablet == 1;
+                if (isMobile == 1)
                 {
                     params[IS_MOBILE]="true";
-                    if (checkIsTablet(user_agent, x_ch_ua_model) == 1)
+                    if (isTablet == 1)
                     {
                         params[IS_TABLET]="true";
                     }
@@ -250,14 +394,14 @@ static int handlerAMF(request_rec* r)
                         params[IS_TOUCH]="true";
                     }
                     params[OPERATIVE_SYSTEM] = getOperativeSystem(r->pool, user_agent, x_ch_ua_platform);
-                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform);
+                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform_version);
                 } else {
                     if (checkIsTV(user_agent)==1) {
                         params[IS_TV]="true";
                     } else {
                         params[IS_DESKTOP]="true";
                         params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(r->pool, user_agent, x_ch_ua_platform);
-                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform);
+                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform_version);
                     } 
                 }
                 struct browserTypeVersion browser=getBrowserVersion(r->pool, user_agent);
@@ -290,6 +434,7 @@ static int handlerAMF(request_rec* r)
         amf_table_set(e, "AMF_CH_UA_ARCH", x_ch_ua_arch);
         amf_table_set(e, "AMF_CH_UA_MODEL", x_ch_ua_model);
         amf_table_set(e, "AMF_CH_UA_PLATFORM", x_ch_ua_platform);
+        amf_table_set(e, "AMF_CH_UA_PLATFORM_VERSION", x_ch_ua_platform_version);
         amf_table_set(e, "AMF_CH_UA_MOBILE", x_ch_ua_mobile);
         amf_table_set(e, "AMF_VER", AMF_VERSION);
         if (setFullBrowser==1) {
@@ -443,37 +588,6 @@ int downloadFile (char *host,char *URI, char fileName[]) {
     return returnValue;
 }
 #endif
-int socket_connect(char *host, in_port_t port,int check){
-    struct hostent *hp;
-    struct sockaddr_in addr;
-    int on = 1, sock;
-    
-    if((hp = gethostbyname(host)) == NULL){
-        if (check==1) {
-            herror("Connection error:");
-            printf("for host %s",host);
-            exit(1);
-        } else {
-            return -1;
-        }
-    } else {
-        bcopy(hp->h_addr, &addr.sin_addr, hp->h_length);
-        addr.sin_port = htons(port);
-        addr.sin_family = AF_INET;
-        sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-        setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-        if(sock == -1){
-            perror("setsockopt");
-            exit(1);
-        } else {
-            if(connect(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
-                perror("connect");
-                exit(1);
-            }
-        }
-    }
-    return sock;
-} 
 int get_cookie_param(request_rec *r)
 {
     const char *cookies;
@@ -500,24 +614,33 @@ int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
 {
     int returnValue=0;
     if (ch_ua_mobile == NULL) {
-        returnValue = match_regex_list(isMobileString, userAgent);
+        returnValue = match_regex_cache(&isMobileRegexCache, userAgent);
     } else {
-        if (strcmp("?1",ch_ua_mobile) == 0)
+        if (client_hint_mobile_true(ch_ua_mobile))
             returnValue=1;
     }
     return returnValue;
 }
 int checkIsTouch (char *userAgent) {
-    return match_regex_list(isTouchString, userAgent);
+    return match_regex_cache(&isTouchRegexCache, userAgent);
 }
 
-int checkIsTablet(char *userAgent, const char *ch_ua_tablet)
+int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile)
 {
-    (void)ch_ua_tablet;
-    return match_regex_list(isTabletString, userAgent);
+    if (match_regex_cache(&isTabletRegexCache, userAgent) == 1) {
+        return 1;
+    }
+
+    if (!client_hint_mobile_true(ch_ua_mobile) &&
+        client_hint_has_value(ch_ua_model) &&
+        client_hint_equals(ch_ua_platform, "android")) {
+        return 1;
+    }
+
+    return 0;
 }
 int checkIsTV (char *userAgent) {
-    return match_regex_list(isTVString, userAgent);
+    return match_regex_cache(&isTVRegexCache, userAgent);
 }
 int compare (const char *stringToSearch, const char *userAgentSearch) {
     
@@ -565,11 +688,15 @@ struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent)
     return browser;
 
 }
-char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os, const char *ch_ua_platform)
+char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os, const char *ch_ua_platform_version)
 {
     char pch[MAX_SIZE];
+    const char *platform_version = trim_client_hint(pool, ch_ua_platform_version);
     int matchOS=-1;
-    (void)ch_ua_platform;
+
+    if (platform_version != NULL && strcmp(platform_version, "0.0.0") != 0) {
+        return apr_pstrdup(pool, platform_version);
+    }
 
     if (strcmp("android", os)==0) {
         snprintf(pch,sizeof(pch),REGEX_ANDROID_VERSION);
@@ -619,10 +746,22 @@ char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_pl
     //Android ([0-9]\.[0-9](\.[0-9])?)
     char ostypes[MAX_SIZE]="android,iphone|ipad|ipod,windows phone,symbianos,blackberry,kindle";
     const char *osnames[] = {"android","ios","windows phone","symbian","blackberry","kindle"};
+    const char *platform = trim_client_hint(pool, ch_ua_platform);
     char *pch;
     char *last = NULL;
     int osNumber=0;
-    (void)ch_ua_platform;
+
+    if (platform != NULL) {
+        if (strcmp(platform, "android") == 0) {
+            return apr_pstrdup(pool, "android");
+        }
+        if (strcmp(platform, "ios") == 0 || strcmp(platform, "ipados") == 0) {
+            return apr_pstrdup(pool, "ios");
+        }
+        if (strcmp(platform, "windows") == 0 || strcmp(platform, "windows phone") == 0) {
+            return apr_pstrdup(pool, "windows phone");
+        }
+    }
 
     pch = apr_strtok(ostypes,",",&last);
     while (pch != NULL)
@@ -645,10 +784,22 @@ char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent, const char *c
     //Android ([0-9]\.[0-9](\.[0-9])?)
     char ostypes[MAX_SIZE]="windows,mac,linux";
     const char *osnames[] = {"windows","mac","linux"};
+    const char *platform = trim_client_hint(pool, ch_ua_platform);
     char *pch;
     char *last = NULL;
     int osNumber=0;
-    (void)ch_ua_platform;
+
+    if (platform != NULL) {
+        if (strcmp(platform, "windows") == 0) {
+            return apr_pstrdup(pool, "windows");
+        }
+        if (strcmp(platform, "macos") == 0 || strcmp(platform, "mac os") == 0) {
+            return apr_pstrdup(pool, "mac");
+        }
+        if (strcmp(platform, "linux") == 0 || strcmp(platform, "chrome os") == 0) {
+            return apr_pstrdup(pool, "linux");
+        }
+    }
 
     pch = apr_strtok(ostypes,",",&last);
     while (pch != NULL)
@@ -715,7 +866,9 @@ void loadParameters(int flag) {
     if (AMFLog==1)
         printf ("AMFDownloadParam is correctly setted\n");
     char nameFile[MAX_SIZE];
-	int returnCode=0;
+#ifdef CURL_SUPPORT
+    int returnCode=0;
+#endif
     snprintf(nameFile,sizeof(nameFile),"%s/litemobiledetectionPlus.config",HomeDir);
 #ifdef CURL_SUPPORT
     if (setDownloadParam==1) {
@@ -728,11 +881,14 @@ void loadParameters(int flag) {
                 printf("Configuration for mobile device detection downloaded failed, try to take old configuration\n");
         } 
         isMobileString=readFile(nameFile,"mobile");
+        compile_regex_cache(&isMobileRegexCache, isMobileString);
     } else {
         isMobileString=readFile(nameFile,"mobile");
+        compile_regex_cache(&isMobileRegexCache, isMobileString);
     }
 #else
         isMobileString=readFile(nameFile,"mobile");
+        compile_regex_cache(&isMobileRegexCache, isMobileString);
 #endif
     // Detect tablet devices
     snprintf(nameFile,sizeof(nameFile),"%s/litetabletdetectionPlus.config",HomeDir);
@@ -745,13 +901,16 @@ void loadParameters(int flag) {
         } else {
             if (AMFLog==1)
                 printf("Configuration for tablet device detection downloaded failed, try to take old configuration\n");
-		}
+			}
         isTabletString=readFile(nameFile,"tablet");
+        compile_regex_cache(&isTabletRegexCache, isTabletString);
     } else {
         isTabletString=readFile(nameFile,"tablet");
+        compile_regex_cache(&isTabletRegexCache, isTabletString);
     }
 #else
         isTabletString=readFile(nameFile,"tablet");
+        compile_regex_cache(&isTabletRegexCache, isTabletString);
 
 #endif
     // Detect touch
@@ -765,13 +924,16 @@ void loadParameters(int flag) {
         } else {
             if (AMFLog==1)
                 printf("Configuration for touch device detection downloaded failed, try to take old configuration\n");
-		}
+			}
         isTouchString=readFile(nameFile,"touch");
+        compile_regex_cache(&isTouchRegexCache, isTouchString);
     } else {
         isTouchString=readFile(nameFile,"touch");
+        compile_regex_cache(&isTouchRegexCache, isTouchString);
     } 
 #else
         isTouchString=readFile(nameFile,"touch");
+        compile_regex_cache(&isTouchRegexCache, isTouchString);
 #endif
     // Detect tv
     snprintf(nameFile,sizeof(nameFile),"%s/litetvdetectionPlus.config",HomeDir);
@@ -784,29 +946,18 @@ void loadParameters(int flag) {
         } else {
             if (AMFLog==1)
                 printf("Configuration for tv device detection downloaded failed, try to take old configuration\n");
-			}
+				}
         isTVString=readFile(nameFile,"tv");
+        compile_regex_cache(&isTVRegexCache, isTVString);
     } else {
         isTVString=readFile(nameFile,"tv");
+        compile_regex_cache(&isTVRegexCache, isTVString);
     } 
 #else
         isTVString=readFile(nameFile,"tv");
+        compile_regex_cache(&isTVRegexCache, isTVString);
 #endif
     
-}
-
-
-size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    size_t written;
-    written = fwrite(ptr, size, nmemb, stream);
-    return written;
-}
-char* substring(const char* str, size_t begin, size_t len)
-{
-    if (str == 0 || strlen(str) == 0 || strlen(str) < begin || strlen(str) < (begin+len))
-        return 0;
-    
-    return strndup(str + begin, len);
 }
 
 /* DIRECTIVE HTTPD.CONF */
@@ -852,7 +1003,8 @@ static const char *set_amflog(cmd_parms *parms, void *dummy, int flag)
 }
 static const char *set_amfReadConfigFile(cmd_parms *parms, void *dummy, int flag)
 {
-    AMFReadConfigFile = flag;
+    if (AMFLog==1)
+        printf ("AMFReadConfigFile is deprecated; configuration files are read automatically\n");
     return NULL;
 }
  
@@ -881,6 +1033,7 @@ static const char *set_fullBrowserKey(cmd_parms *cmd, void *dummy, const char *m
         printf ("AMFKeyFullBrowser is %s \nFor access the device to fullbrowser set the link: <url>%s=true\n",KeyFullBrowser,KeyFullBrowser);
     return NULL;
 }
+#ifdef CURL_SUPPORT
 static const char *set_proxy(cmd_parms *cmd, void *dummy, const char *map)
 {
     ProxyUrl=(char *) map;
@@ -907,6 +1060,7 @@ static const char *set_downloadParam(cmd_parms *parms, void *dummy, int flag)
     loadParameters(flag);
     return NULL;
 }
+#endif
 
 static const char *set_homeDir(cmd_parms *cmd, void *dummy, const char *map)
 {
@@ -923,21 +1077,25 @@ static const char *set_homeDir(cmd_parms *cmd, void *dummy, const char *map)
 static const char *set_mobile(cmd_parms *cmd, void *dummy, const char *map)
 {
     isMobileString=(char *) map;
+    compile_regex_cache(&isMobileRegexCache, isMobileString);
     return NULL;
 }
 static const char *set_touch(cmd_parms *cmd, void *dummy, const char *map)
 {
     isTouchString=(char *) map;
+    compile_regex_cache(&isTouchRegexCache, isTouchString);
     return NULL;
 }
 static const char *set_tablet(cmd_parms *cmd, void *dummy, const char *map)
 {
     isTabletString=(char *) map;
+    compile_regex_cache(&isTabletRegexCache, isTabletString);
     return NULL;
 }
 static const char *set_tv(cmd_parms *cmd, void *dummy, const char *map)
 {
     isTVString=(char *) map;
+    compile_regex_cache(&isTVRegexCache, isTVString);
     return NULL;
 }
 

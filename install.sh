@@ -45,8 +45,8 @@ do
             fi
         else
             echo "Libcurl not found"
-            grep -v "#define CURL_SUPPORT" mod_amf.tmpl > mod_amf.h
-            if ! run_apxs -c -a -i mod_amf.c; then
+            cp mod_amf.tmpl mod_amf.h
+            if ! run_apxs -c -a -i -Wc,-DAMF_NO_CURL_SUPPORT mod_amf.c; then
                 echo "apxs failed to compile or install mod_amf"
                 exit 1
             fi

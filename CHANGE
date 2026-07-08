@@ -1,7 +1,8 @@
-1.5.0.0 - 08 Jul 2026
+2.0.0 - 08 Jul 2026
 Fix build with modern Apache 2.4 headers.
 Harden request parsing, cookie handling, TLS downloads, and installer behavior.
-Add minimal GitHub Actions build workflow and project license metadata.
+Add compiled regex caches, stronger UA-CH platform handling, dual-path CI, and release packaging.
+Remove obsolete compiled artifacts and dead legacy helpers.
 
 1.4.0.0 - 16 Nov 2018
 The repository now is download from github
