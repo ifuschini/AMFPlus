@@ -28,6 +28,8 @@
 #include <http_protocol.h>
 #include <regex.h>
 
+#include "amf_apache_compat.h"
+
 #ifndef _mod_amf_h
 #define _mod_amf_h
 

@@ -145,9 +145,10 @@ between traffic and application code:
 
 ## Installation
 
-1. Install `gcc`, Apache httpd 2.0.x, 2.2.x, 2.4.x or newer, and Apache
-   Extensions Tool (`apxs`, usually included in `httpd-devel` or an equivalent
-   package). `libcurl` is recommended; AMFPlus also builds without it.
+1. Install `gcc`, Apache httpd 2.0.x, 2.2.x, 2.4.x, 2.5.x, or 2.6.x, and
+   Apache Extensions Tool (`apxs`, usually included in `httpd-devel` or an
+   equivalent package). `libcurl` is recommended; AMFPlus also builds without
+   it.
 
 2. As root, run the install script:
 
@@ -300,6 +301,15 @@ AMFPlus rule files and decide which rules should be kept, changed, or
 removed.
 
 ## Compatibility Notes
+
+AMFPlus is built against the Apache httpd 2.x module API. The source includes
+compile-time compatibility checks intended for Apache httpd 2.0 through 2.6
+headers and fails early when built against a different major version or a
+future minor branch that has not been reviewed yet. The module intentionally
+stays on the stable 2.x APIs used by `apxs`, `request_rec`, Apache hooks,
+directives, and APR tables, so deployments can move within the Apache 2.x line,
+including 2.5/2.6 headers when available in their platform, without changing
+AMFPlus configuration.
 
 User-Agent strings are increasingly reduced by browser vendors, and UA-CH
 availability depends on browser support, HTTPS, cache policy, and whether the

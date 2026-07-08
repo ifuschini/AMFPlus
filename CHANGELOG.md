@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Move Apache module source files into `src/` and update install, test, and packaging paths.
+- Add explicit Apache httpd 2.5 and 2.6 compatibility checks and documentation.
 
 ## 2.0.1 - 08 Jul 2026
 
