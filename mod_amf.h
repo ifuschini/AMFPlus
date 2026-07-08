@@ -43,16 +43,16 @@ struct browserTypeVersion
 
 int compare(const char *string, const char *userAgent);
 int compile_regex(regex_t *r, const char *regex_text);
-int checkIsMobile(char *userAgent, const char *ch_ua_mobile);
-int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile);
-int checkIsTouch(char *userAgent);
-int checkIsTV(char *userAgent);
-int checkIsConsole(char *userAgent);
-int checkIsSetTopBox(char *userAgent);
-int checkIsEReader(char *userAgent);
-int checkIsAutomotive(char *userAgent);
-int checkIsWearable(char *userAgent);
-int checkIsBot(char *userAgent);
+int checkIsMobile(const char *userAgent, const char *ch_ua_mobile);
+int checkIsTablet(const char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile);
+int checkIsTouch(const char *userAgent);
+int checkIsTV(const char *userAgent);
+int checkIsConsole(const char *userAgent);
+int checkIsSetTopBox(const char *userAgent);
+int checkIsEReader(const char *userAgent);
+int checkIsAutomotive(const char *userAgent);
+int checkIsWearable(const char *userAgent);
+int checkIsBot(const char *userAgent);
 int checkQueryStringIsFull(const char *queryString);
 int get_cookie_param(request_rec *r);
 char *get_cookie_device_param(request_rec *r);
@@ -60,10 +60,10 @@ char *get_cookie_device_param(request_rec *r);
 int downloadFile(char *host, char *URI, char fileName[]);
 #endif
 void loadParameters(int flag);
-char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_platform);
-char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent,const char *ch_ua_platform);
-char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os,const char *ch_ua_platform_version);
-struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent);
+char *getOperativeSystem(apr_pool_t *pool, const char *useragent, const char *ch_ua_platform);
+char *getOperativeSystemDesktop(apr_pool_t *pool, const char *useragent,const char *ch_ua_platform);
+char *getOperativeSystemVersion(apr_pool_t *pool, const char *useragent, const char *os,const char *ch_ua_platform_version);
+struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, const char *useragent);
 int match_regex(regex_t *r, const char *to_match);
 char *match_regex_string(apr_pool_t *pool, regex_t *r, const char *to_match, int matchOS);
 

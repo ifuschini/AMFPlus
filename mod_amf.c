@@ -330,6 +330,123 @@ static int client_hint_mobile_true(const char *value)
 {
     return value != NULL && strcmp(value, "?1") == 0;
 }
+
+static char *amf_pstrdup_nc(apr_pool_t *pool)
+{
+    return apr_pstrdup(pool, "nc");
+}
+
+static int is_version_char(int ch)
+{
+    return isdigit((unsigned char)ch) || ch == '.' || ch == '_';
+}
+
+static char *extract_version_after(apr_pool_t *pool, const char *value, const char *marker)
+{
+    const char *start;
+    const char *end;
+
+    if (pool == NULL || value == NULL || marker == NULL) {
+        return pool != NULL ? amf_pstrdup_nc(pool) : "nc";
+    }
+
+    start = strstr(value, marker);
+    if (start == NULL) {
+        return amf_pstrdup_nc(pool);
+    }
+
+    start += strlen(marker);
+    if (!isdigit((unsigned char)*start)) {
+        return amf_pstrdup_nc(pool);
+    }
+
+    end = start;
+    while (*end != '\0' && is_version_char((unsigned char)*end)) {
+        end++;
+    }
+
+    if (end == start) {
+        return amf_pstrdup_nc(pool);
+    }
+    return apr_pstrndup(pool, start, end - start);
+}
+
+static struct browserTypeVersion make_unknown_browser(apr_pool_t *pool)
+{
+    struct browserTypeVersion browser;
+
+    browser.type = amf_pstrdup_nc(pool);
+    browser.version = amf_pstrdup_nc(pool);
+    return browser;
+}
+
+static int browser_token_match(apr_pool_t *pool, const char *useragent, const char *token, struct browserTypeVersion *browser)
+{
+    const char *cursor;
+    size_t token_len;
+
+    if (pool == NULL || useragent == NULL || token == NULL || browser == NULL) {
+        return 0;
+    }
+
+    token_len = strlen(token);
+    cursor = useragent;
+    while ((cursor = strstr(cursor, token)) != NULL) {
+        const char *version = cursor + token_len;
+        const char *end;
+
+        if (*version != '/') {
+            cursor += token_len;
+            continue;
+        }
+
+        version++;
+        if (!isdigit((unsigned char)*version)) {
+            cursor += token_len;
+            continue;
+        }
+
+        end = version;
+        while (*end != '\0' && (isdigit((unsigned char)*end) || *end == '.')) {
+            end++;
+        }
+
+        browser->type = apr_pstrdup(pool, token);
+        browser->version = apr_pstrndup(pool, version, end - version);
+        return 1;
+    }
+    return 0;
+}
+
+static int is_android_tablet_fallback_candidate_with_context(const char *userAgent, int isTV, int isEReader, int isAutomotive, int isWearable, int isBot)
+{
+    if (userAgent == NULL || strstr(userAgent, "android") == NULL) {
+        return 0;
+    }
+    if (strstr(userAgent, "mobile") != NULL || isTV == 1 || isEReader == 1 || isAutomotive == 1 || isWearable == 1 || isBot == 1) {
+        return 0;
+    }
+    return 1;
+}
+
+static int checkIsTabletWithContext(const char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile, int isTV, int isEReader, int isAutomotive, int isWearable, int isBot)
+{
+    if (match_regex_cache(&isTabletRegexCache, userAgent) == 1) {
+        return 1;
+    }
+
+    if (is_android_tablet_fallback_candidate_with_context(userAgent, isTV, isEReader, isAutomotive, isWearable, isBot) == 1) {
+        return 1;
+    }
+
+    if (!client_hint_mobile_true(ch_ua_mobile) &&
+        client_hint_has_value(ch_ua_model) &&
+        client_hint_equals(ch_ua_platform, "android")) {
+        return 1;
+    }
+
+    return 0;
+}
 #pragma mark handler
 static int handlerAMF(request_rec* r)
 {
@@ -443,7 +560,7 @@ static int handlerAMF(request_rec* r)
                 isTablet = 0;
                 isMobile = 0;
                 if (isBot == 0 && isTV == 0 && isEReader == 0 && isAutomotive == 0 && isWearable == 0) {
-                    isTablet = checkIsTablet(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile);
+                    isTablet = checkIsTabletWithContext(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile, isTV, isEReader, isAutomotive, isWearable, isBot);
                     isMobile = checkIsMobile(user_agent, x_ch_ua_mobile) == 1 || isTablet == 1;
                 }
                 if (isBot == 1) {
@@ -565,25 +682,11 @@ int compile_regex (regex_t * r, const char * regex_text)
 
 int match_regex (regex_t * r, const char * to_match)
 {
-    /* "P" is a pointer into the string which points to the end of the
-     previous match. */
-    const char * p = to_match;
-    /* "M" contains the matches found. */
-    regmatch_t m[MATCH_REGEX_MAX_MATCHES];
-    int nomatch;
-
     if (to_match == NULL) {
         return 1;
     }
 
-    nomatch = regexec (r, p, MATCH_REGEX_MAX_MATCHES, m, 0);
-    if (nomatch) {
-        //printf ("No more matches.\n");
-        return 1;
-    } else {
-        return 0;
-    }
-    return 0;
+    return regexec(r, to_match, 0, NULL, 0) == 0 ? 0 : 1;
 }
 char *match_regex_string (apr_pool_t *pool, regex_t * r, const char * to_match, int matchOS)
 {
@@ -728,7 +831,7 @@ int checkQueryStringIsFull (const char *queryString) {
     }
     return returnValue;
 }
-int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
+int checkIsMobile(const char *userAgent, const char *ch_ua_mobile)
 {
     int returnValue=0;
     if (ch_ua_mobile == NULL) {
@@ -739,36 +842,36 @@ int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
     }
     return returnValue;
 }
-int checkIsTouch (char *userAgent) {
+int checkIsTouch (const char *userAgent) {
     return match_regex_cache(&isTouchRegexCache, userAgent);
 }
 
-int checkIsConsole(char *userAgent)
+int checkIsConsole(const char *userAgent)
 {
     return match_regex_cache(&isConsoleRegexCache, userAgent);
 }
 
-int checkIsSetTopBox(char *userAgent)
+int checkIsSetTopBox(const char *userAgent)
 {
     return match_regex_cache(&isSetTopBoxRegexCache, userAgent);
 }
 
-int checkIsEReader(char *userAgent)
+int checkIsEReader(const char *userAgent)
 {
     return match_regex_cache(&isEReaderRegexCache, userAgent);
 }
 
-int checkIsAutomotive(char *userAgent)
+int checkIsAutomotive(const char *userAgent)
 {
     return match_regex_cache(&isAutomotiveRegexCache, userAgent);
 }
 
-int checkIsWearable(char *userAgent)
+int checkIsWearable(const char *userAgent)
 {
     return match_regex_cache(&isWearableRegexCache, userAgent);
 }
 
-int checkIsBot(char *userAgent)
+int checkIsBot(const char *userAgent)
 {
     return match_regex_cache(&isBotRegexCache, userAgent);
 }
@@ -779,19 +882,19 @@ static int is_android_tablet_fallback_candidate(const char *userAgent)
         return 0;
     }
     if (strstr(userAgent, "mobile") != NULL ||
-        checkIsTV((char *)userAgent) == 1 ||
-        checkIsConsole((char *)userAgent) == 1 ||
-        checkIsSetTopBox((char *)userAgent) == 1 ||
-        checkIsEReader((char *)userAgent) == 1 ||
-        checkIsAutomotive((char *)userAgent) == 1 ||
-        checkIsWearable((char *)userAgent) == 1 ||
-        checkIsBot((char *)userAgent) == 1) {
+        checkIsTV(userAgent) == 1 ||
+        checkIsConsole(userAgent) == 1 ||
+        checkIsSetTopBox(userAgent) == 1 ||
+        checkIsEReader(userAgent) == 1 ||
+        checkIsAutomotive(userAgent) == 1 ||
+        checkIsWearable(userAgent) == 1 ||
+        checkIsBot(userAgent) == 1) {
         return 0;
     }
     return 1;
 }
 
-int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile)
+int checkIsTablet(const char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile)
 {
     if (match_regex_cache(&isTabletRegexCache, userAgent) == 1) {
         return 1;
@@ -809,7 +912,7 @@ int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_pl
 
     return 0;
 }
-int checkIsTV (char *userAgent) {
+int checkIsTV (const char *userAgent) {
     return match_regex_cache(&isTVRegexCache, userAgent);
 }
 int compare (const char *stringToSearch, const char *userAgentSearch) {
@@ -833,93 +936,74 @@ int compare (const char *stringToSearch, const char *userAgentSearch) {
     return returnValue;
 }
 #pragma mark get mobile OS
-struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent)
+struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, const char *useragent)
 {
-    struct browserTypeVersion browser;
-    char pch[MAX_SIZE];
-    snprintf(pch,sizeof(pch),REGEX_BROWSER_TYPE);
-    browser.type=apr_pstrdup(pool, "nc");
-    browser.version=apr_pstrdup(pool, "nc");
-    regex_t r;
-    if (compile_regex(& r, pch)==0) {
-        browser.type=match_regex_string(pool, & r, useragent,1);
-        browser.version=match_regex_string(pool, & r, useragent,2);
-        regfree (& r);
-        if (strcmp("nc",browser.type)==0) {
-            regex_t r2;
-            snprintf(pch,sizeof(pch),REGEX_BROWSER_TYPE2);
-            if (compile_regex(& r2, pch)==0) {
-                browser.type=match_regex_string(pool, & r2, useragent,1);
-                browser.version=match_regex_string(pool, & r2, useragent,2);
-                regfree (& r2);
-            }
-        }
-    } 
-    return browser;
+    struct browserTypeVersion browser = make_unknown_browser(pool);
+    static const char *browser_tokens[] = {
+        "firefox", "msie", "chrome", "chromium", "safari", "edge", "seamonkey", "opera", NULL
+    };
+    int i;
 
+    for (i = 0; browser_tokens[i] != NULL; i++) {
+        if (browser_token_match(pool, useragent, browser_tokens[i], &browser) == 1) {
+            break;
+        }
+    }
+    return browser;
 }
-char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os, const char *ch_ua_platform_version)
+char *getOperativeSystemVersion(apr_pool_t *pool, const char *useragent, const char *os, const char *ch_ua_platform_version)
 {
-    char pch[MAX_SIZE];
     const char *platform_version = trim_client_hint(pool, ch_ua_platform_version);
-    int matchOS=-1;
 
     if (platform_version != NULL && strcmp(platform_version, "0.0.0") != 0) {
         return apr_pstrdup(pool, platform_version);
     }
 
     if (strcmp("android", os)==0) {
-        snprintf(pch,sizeof(pch),REGEX_ANDROID_VERSION);
-        matchOS=1;
+        return extract_version_after(pool, useragent, "android ");
     } else if (strcmp("ios", os)==0) {
-        snprintf(pch,sizeof(pch),REGEX_IOS_VERSION);
-        matchOS=1;
+        return extract_version_after(pool, useragent, "os ");
     } else if (strcmp("windows phone", os)==0) {
-        snprintf(pch,sizeof(pch),REGEX_WINDOWS_MOBILE_VERSION);
-        matchOS=2;
-    } else if (strcmp("symbian", os)==0) {
-        snprintf(pch,sizeof(pch),REGEX_SYMBIANOS_VERSION);
-        matchOS=1;
-    } else if (strcmp("mac", os)==0) {
-        snprintf(pch,sizeof(pch),REGEX_OSX_VERSION);
-        matchOS=1;
-    } 
-    
-    if (matchOS!=-1) {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            char *returnMatch=match_regex_string(pool, & r, useragent,matchOS);
-            regfree (& r);
-            return returnMatch;
+        char *version = extract_version_after(pool, useragent, " phone os ");
+
+        if (strcmp(version, "nc") != 0) {
+            return version;
         }
-    }
-    return apr_pstrdup(pool, "nc");
+        return extract_version_after(pool, useragent, " phone ");
+    } else if (strcmp("symbian", os)==0) {
+        return extract_version_after(pool, useragent, "symbianos/");
+    } else if (strcmp("mac", os)==0) {
+        return extract_version_after(pool, useragent, "os x ");
+    } 
+
+    return amf_pstrdup_nc(pool);
 }
 char* get_cookie_device_param(request_rec *r)
 {
     const char *cookies;
-    char pch[MAX_SIZE];
-    snprintf(pch,sizeof(pch),"AMFParams=([^;]+)");
+
     if ((cookies = apr_table_get(r->headers_in, "Cookie"))) {
-        regex_t cookie_regex;
-        if (compile_regex(& cookie_regex, pch)==0) {
-            char *returnMatch=match_regex_string(r->pool, & cookie_regex, cookies,1);
-            regfree (& cookie_regex);
-            return returnMatch;
+        const char *start = strstr(cookies, "AMFParams=");
+
+        if (start != NULL) {
+            const char *end;
+
+            start += strlen("AMFParams=");
+            end = strchr(start, ';');
+            if (end == NULL) {
+                end = start + strlen(start);
+            }
+            if (end > start) {
+                return apr_pstrndup(r->pool, start, end - start);
+            }
         }
     }
-    return apr_pstrdup(r->pool, "nc");
+    return amf_pstrdup_nc(r->pool);
 
 }
-char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_platform)
+char *getOperativeSystem(apr_pool_t *pool, const char *useragent, const char *ch_ua_platform)
 {
-    //Android ([0-9]\.[0-9](\.[0-9])?)
-    char ostypes[MAX_SIZE]="android,iphone|ipad|ipod,windows phone,symbianos,blackberry,kindle";
-    const char *osnames[] = {"android","ios","windows phone","symbian","blackberry","kindle"};
     const char *platform = trim_client_hint(pool, ch_ua_platform);
-    char *pch;
-    char *last = NULL;
-    int osNumber=0;
 
     if (platform != NULL) {
         if (strcmp(platform, "android") == 0) {
@@ -933,31 +1017,29 @@ char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_pl
         }
     }
 
-    pch = apr_strtok(ostypes,",",&last);
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, useragent)==0) {
-                regfree (& r);
-                return apr_pstrdup(pool, osnames[osNumber]);
-            }
-            regfree (& r);
-        }
-        osNumber++;
-        pch = apr_strtok(NULL, ",", &last);
+    if (strstr(useragent, "android") != NULL) {
+        return apr_pstrdup(pool, "android");
     }
-    return apr_pstrdup(pool, "nc");
+    if (strstr(useragent, "iphone") != NULL || strstr(useragent, "ipad") != NULL || strstr(useragent, "ipod") != NULL) {
+        return apr_pstrdup(pool, "ios");
+    }
+    if (strstr(useragent, "windows phone") != NULL) {
+        return apr_pstrdup(pool, "windows phone");
+    }
+    if (strstr(useragent, "symbianos") != NULL) {
+        return apr_pstrdup(pool, "symbian");
+    }
+    if (strstr(useragent, "blackberry") != NULL) {
+        return apr_pstrdup(pool, "blackberry");
+    }
+    if (strstr(useragent, "kindle") != NULL) {
+        return apr_pstrdup(pool, "kindle");
+    }
+    return amf_pstrdup_nc(pool);
 }
-char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent, const char *ch_ua_platform)
+char *getOperativeSystemDesktop(apr_pool_t *pool, const char *useragent, const char *ch_ua_platform)
 {
-    //Android ([0-9]\.[0-9](\.[0-9])?)
-    char ostypes[MAX_SIZE]="windows,mac,linux";
-    const char *osnames[] = {"windows","mac","linux"};
     const char *platform = trim_client_hint(pool, ch_ua_platform);
-    char *pch;
-    char *last = NULL;
-    int osNumber=0;
 
     if (platform != NULL) {
         if (strcmp(platform, "windows") == 0) {
@@ -971,21 +1053,16 @@ char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent, const char *c
         }
     }
 
-    pch = apr_strtok(ostypes,",",&last);
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, useragent)==0) {
-                regfree (& r);
-                return apr_pstrdup(pool, osnames[osNumber]);
-            }
-            regfree (& r);
-        }
-        osNumber++;
-        pch = apr_strtok(NULL, ",", &last);
+    if (strstr(useragent, "windows") != NULL) {
+        return apr_pstrdup(pool, "windows");
     }
-    return apr_pstrdup(pool, "nc");
+    if (strstr(useragent, "mac") != NULL) {
+        return apr_pstrdup(pool, "mac");
+    }
+    if (strstr(useragent, "linux") != NULL) {
+        return apr_pstrdup(pool, "linux");
+    }
+    return amf_pstrdup_nc(pool);
 }
 char* readFile(char *nameFile, char *type) {
     FILE *fp;

@@ -290,6 +290,23 @@ int main(void)
     assert_string("desktop os from client hint", getOperativeSystemDesktop(pool, "mozilla/5.0", "\"macOS\""), "mac");
     assert_string("platform version from client hint", getOperativeSystemVersion(pool, "mozilla/5.0", "android", "\"14.0.0\""), "14.0.0");
     assert_string("ios os from user-agent", getOperativeSystem(pool, "mozilla/5.0 iphone os 17_1", NULL), "ios");
+    assert_string("android version from user-agent", getOperativeSystemVersion(pool, "mozilla/5.0 linux android 15; pixel", "android", NULL), "15");
+
+    {
+        struct browserTypeVersion browser = getBrowserVersion(pool, "mozilla/5.0 applewebkit/537.36 chrome/137.0.7151.68 mobile safari/537.36");
+        assert_string("browser type from user-agent", browser.type, "chrome");
+        assert_string("browser version from user-agent", browser.version, "137.0.7151.68");
+    }
+
+    {
+        request_rec r;
+
+        memset(&r, 0, sizeof(r));
+        r.pool = pool;
+        r.headers_in = apr_table_make(pool, 1);
+        apr_table_set(r.headers_in, "Cookie", "foo=bar; AMFParams=dummy,true,false,false,false; path=/; other=value");
+        assert_string("AMFParams cookie parser", get_cookie_device_param(&r), "dummy,true,false,false,false");
+    }
 
     load_detection_rules();
 

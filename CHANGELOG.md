@@ -16,6 +16,8 @@
 - Add `AMFconsole`, `AMFsettopbox`, `AMFereader`, `AMFautomotive`, `AMFwearable`, and `AMFbot` configuration directives with packaged rule files.
 - Move generated release tarballs out of source control and add a local package script for GitHub Releases.
 - Rename packaged regex directory from `repository/` to `rules/`.
+- Reduce per-request regex overhead in User-Agent classification, browser parsing, OS detection, and production cookie parsing.
+- Add focused regression tests for manual browser, OS version, and `AMFParams` cookie parsing.
 
 ## 1.4.0.0 - 16 Nov 2018
 
