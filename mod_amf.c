@@ -383,6 +383,7 @@ static int handlerAMF(request_rec* r)
                 char *cursor;
                 int isTablet;
                 int isMobile;
+                int isTV;
 
                 if (x_user_agent != NULL) {
                     source_user_agent = x_user_agent;
@@ -400,9 +401,16 @@ static int handlerAMF(request_rec* r)
                 }
 
                 //ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL, "ua: %s", string);
-                isTablet = checkIsTablet(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile);
-                isMobile = checkIsMobile(user_agent, x_ch_ua_mobile) == 1 || isTablet == 1;
-                if (isMobile == 1)
+                isTV = checkIsTV(user_agent);
+                isTablet = 0;
+                isMobile = 0;
+                if (isTV == 0) {
+                    isTablet = checkIsTablet(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile);
+                    isMobile = checkIsMobile(user_agent, x_ch_ua_mobile) == 1 || isTablet == 1;
+                }
+                if (isTV == 1) {
+                    params[IS_TV]="true";
+                } else if (isMobile == 1)
                 {
                     params[IS_MOBILE]="true";
                     if (isTablet == 1)
@@ -415,13 +423,9 @@ static int handlerAMF(request_rec* r)
                     params[OPERATIVE_SYSTEM] = getOperativeSystem(r->pool, user_agent, x_ch_ua_platform);
                     params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform_version);
                 } else {
-                    if (checkIsTV(user_agent)==1) {
-                        params[IS_TV]="true";
-                    } else {
-                        params[IS_DESKTOP]="true";
-                        params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(r->pool, user_agent, x_ch_ua_platform);
-                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform_version);
-                    } 
+                    params[IS_DESKTOP]="true";
+                    params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(r->pool, user_agent, x_ch_ua_platform);
+                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform_version);
                 }
                 struct browserTypeVersion browser=getBrowserVersion(r->pool, user_agent);
                 
@@ -675,9 +679,30 @@ int checkIsTouch (char *userAgent) {
     return match_regex_cache(&isTouchRegexCache, userAgent);
 }
 
+static int is_android_tablet_fallback_candidate(const char *userAgent)
+{
+    if (userAgent == NULL || strstr(userAgent, "android") == NULL) {
+        return 0;
+    }
+    if (strstr(userAgent, "mobile") != NULL || checkIsTV((char *)userAgent) == 1) {
+        return 0;
+    }
+    if (strstr(userAgent, "automotive") != NULL ||
+        strstr(userAgent, "wear os") != NULL ||
+        strstr(userAgent, "watchos") != NULL ||
+        strstr(userAgent, "rog ally") != NULL) {
+        return 0;
+    }
+    return 1;
+}
+
 int checkIsTablet(char *userAgent, const char *ch_ua_model, const char *ch_ua_platform, const char *ch_ua_mobile)
 {
     if (match_regex_cache(&isTabletRegexCache, userAgent) == 1) {
+        return 1;
+    }
+
+    if (is_android_tablet_fallback_candidate(userAgent) == 1) {
         return 1;
     }
 

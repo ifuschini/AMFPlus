@@ -7,6 +7,8 @@ Add opt-in Accept-CH/Vary response headers through AMFClientHints.
 Document AMF+ as a legacy compatibility adapter rather than a perfect device detector.
 Add UA and UA-CH sample detection tests.
 Disable repository downloads by default and expose AMF_REPOSITORY_VERSION.
+Extend packaged OEM, console, set-top box, and connected-TV User-Agent regex rules with complete fixture coverage.
+Prioritize TV-like devices before generic mobile matches and add Android-without-Mobile tablet fallback.
 
 1.4.0.0 - 16 Nov 2018
 The repository now is download from github

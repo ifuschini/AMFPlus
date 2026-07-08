@@ -1,0 +1,541 @@
+AMFPlus - User-Agent reference list and regex patterns
+Version: 1.0
+Purpose: practical test dataset for AMFPlus device detection
+
+IMPORTANT NOTE
+--------------
+There is no finite or complete list of all User-Agent strings.
+User-Agent values change by browser version, OS version, device model, embedded webview,
+application, OEM browser, privacy policy and User-Agent Client Hints adoption.
+
+This file contains a broad representative dataset useful for testing AMFPlus detection:
+- mobile phones
+- tablets
+- Samsung and Android OEM-specific devices
+- desktop browsers
+- smart TVs and connected TV devices
+- consoles
+- set-top boxes
+- e-readers
+- automotive and wearable browsers
+- bots and crawlers
+- suggested regex patterns for AMFPlus repository files
+
+Recommended AMFPlus classification priority:
+1. Bot / crawler
+2. Console
+3. TV / connected TV / set-top box
+4. Tablet
+5. Mobile phone
+6. Desktop
+7. Unknown
+
+============================================================
+SECTION 1 - IPHONE / IOS SAFARI
+============================================================
+
+Mozilla/5.0 (iPhone; CPU iPhone OS 15_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.8 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.7 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1
+
+============================================================
+SECTION 2 - IPHONE / CHROME IOS
+============================================================
+
+Mozilla/5.0 (iPhone; CPU iPhone OS 15_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.6099.119 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/124.0.6367.72 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.108 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/128.0.6613.98 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/137.0.7151.68 Mobile/15E148 Safari/604.1
+
+============================================================
+SECTION 3 - IPHONE / FIREFOX IOS
+============================================================
+
+Mozilla/5.0 (iPhone; CPU iPhone OS 15_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/120.0 Mobile/15E148 Safari/605.1.15
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/124.0 Mobile/15E148 Safari/605.1.15
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/127.0 Mobile/15E148 Safari/605.1.15
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/129.0 Mobile/15E148 Safari/605.1.15
+
+============================================================
+SECTION 4 - IPAD / SAFARI
+============================================================
+
+Mozilla/5.0 (iPad; CPU OS 15_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.8 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPad; CPU OS 16_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.7 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPad; CPU OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPad; CPU OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (iPad; CPU OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1
+
+============================================================
+SECTION 5 - IPADOS DESKTOP MODE
+============================================================
+
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.8 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.7 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15
+
+============================================================
+SECTION 6 - ANDROID PHONE / GOOGLE PIXEL / CHROME
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro Fold) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+
+============================================================
+SECTION 7 - SAMSUNG GALAXY PHONE / CHROME
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; SM-S938B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-A556B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-M556B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 12; SM-N986B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; SM-F956B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; SM-F741B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+
+============================================================
+SECTION 8 - SAMSUNG GALAXY PHONE / SAMSUNG INTERNET
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; SAMSUNG SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/22.0 Chrome/108.0.0.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; SAMSUNG SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/24.0 Chrome/117.0.0.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/26.0 Chrome/122.0.0.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; SAMSUNG SM-S938B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/27.0 Chrome/125.0.0.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-A556B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/26.0 Chrome/122.0.0.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; SAMSUNG SM-F956B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/27.0 Chrome/125.0.0.0 Mobile Safari/537.36
+
+============================================================
+SECTION 9 - SAMSUNG TABLET
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; SM-T870) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36
+Mozilla/5.0 (Linux; Android 13; SM-T970) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-X910) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 13; SM-T636B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-X910) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/26.0 Chrome/122.0.0.0 Safari/537.36
+
+============================================================
+SECTION 10 - HUAWEI / HONOR
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; HUAWEI VOG-L29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 12; HUAWEI ANA-NX9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; HUAWEI ELS-NX9) AppleWebKit/537.36 (KHTML, like Gecko) HuaweiBrowser/13.0.1.300 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; HONOR LGE-NX9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; HONOR PGT-N19) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 12; HUAWEI MatePad) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36
+Mozilla/5.0 (Linux; Android 13; HUAWEI BAH4-W09) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Safari/537.36
+
+============================================================
+SECTION 11 - XIAOMI / REDMI / POCO
+============================================================
+
+Mozilla/5.0 (Linux; Android 13; Xiaomi 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Xiaomi 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; 23127PN0CG) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Redmi Note 13 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; POCO F6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Xiaomi 14) AppleWebKit/537.36 (KHTML, like Gecko) MiuiBrowser/15.0 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Xiaomi Pad 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Redmi Pad SE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+
+============================================================
+SECTION 12 - OPPO / ONEPLUS / REALME
+============================================================
+
+Mozilla/5.0 (Linux; Android 13; CPH2305) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; CPH2609) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; OPPO Find X7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; OnePlus 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 15; OnePlus 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; RMX3840) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Realme GT 6) AppleWebKit/537.36 (KHTML, like Gecko) RealmeBrowser/45.8.4 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; OPPO Pad 2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; OnePlus Pad) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+
+============================================================
+SECTION 13 - VIVO / IQOO
+============================================================
+
+Mozilla/5.0 (Linux; Android 13; vivo V29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; vivo X100 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; V2324A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; iQOO 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Vivo Pad) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+
+============================================================
+SECTION 14 - MOTOROLA / LENOVO / NOKIA / SONY / ASUS / NOTHING
+============================================================
+
+Mozilla/5.0 (Linux; Android 13; motorola edge 40) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; motorola edge 50 pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; moto g84 5G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; XT2403-2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 13; Lenovo TB370FU) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Lenovo TB320FC) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Nokia X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Xperia 1 VI) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; ASUS_AI2401) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; ROG Phone 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Nothing Phone 2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36
+
+============================================================
+SECTION 15 - ANDROID FIREFOX / EDGE / OPERA / DUCKDUCKGO
+============================================================
+
+Mozilla/5.0 (Android 13; Mobile; rv:127.0) Gecko/127.0 Firefox/127.0
+Mozilla/5.0 (Android 14; Mobile; rv:129.0) Gecko/129.0 Firefox/129.0
+Mozilla/5.0 (Android 15; Mobile; rv:139.0) Gecko/139.0 Firefox/139.0
+Mozilla/5.0 (Android 14; Tablet; rv:129.0) Gecko/129.0 Firefox/129.0
+Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36 EdgA/128.0.2739.42
+Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Mobile Safari/537.36 OPR/80.0.4244.77831
+Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.6613.99 Mobile DuckDuckGo/5 Safari/537.36
+
+============================================================
+SECTION 16 - AMAZON KINDLE / FIRE TABLET / SILK
+============================================================
+
+Mozilla/5.0 (Linux; U; Android 11; en-us; KFTRWI Build/RS8111) AppleWebKit/537.36 (KHTML, like Gecko) Silk/112.5.1 like Chrome/112.0.5615.136 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; KFMAWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/121.4.6 like Chrome/121.0.6167.143 Safari/537.36
+Mozilla/5.0 (Linux; Android 12; KFMUWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/124.4.6 like Chrome/124.0.6367.72 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; KFONWI) AppleWebKit/537.36 (KHTML, like Gecko) Silk/121.4.6 like Chrome/121.0.6167.143 Safari/537.36
+Mozilla/5.0 (X11; U; Linux armv7l like Android; en-us) AppleWebKit/531.2+ Kindle/3.0+ Safari/531.2+
+
+============================================================
+SECTION 17 - WINDOWS DESKTOP
+============================================================
+
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Safari/537.36
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36 Edg/128.0.2739.42
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Safari/537.36
+
+============================================================
+SECTION 18 - MAC DESKTOP
+============================================================
+
+Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6_9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Safari/537.36
+Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 26_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15
+Mozilla/5.0 (Macintosh; Intel Mac OS X 15.5; rv:139.0) Gecko/20100101 Firefox/139.0
+
+============================================================
+SECTION 19 - LINUX DESKTOP / CHROMEBOOK
+============================================================
+
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.68 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0
+Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0
+Mozilla/5.0 (X11; CrOS x86_64 15853.67.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (X11; CrOS aarch64 15853.67.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+
+============================================================
+SECTION 20 - SMART TV / SAMSUNG TIZEN
+============================================================
+
+Mozilla/5.0 (SMART-TV; LINUX; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 TV Safari/537.36
+Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/5.0 TV Safari/537.36
+Mozilla/5.0 (SMART-TV; LINUX; Tizen 7.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/6.0 TV Safari/537.36
+Mozilla/5.0 (SMART-TV; LINUX; Tizen 8.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/7.0 TV Safari/537.36
+Mozilla/5.0 (SMART-TV; Linux; Tizen) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/7.0 TV Safari/537.36
+
+============================================================
+SECTION 21 - SMART TV / LG WEBOS
+============================================================
+
+Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 WebAppManager
+Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.79 Safari/537.36 WebAppManager
+Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36 WebAppManager
+Mozilla/5.0 (webOS.TV; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36 WebAppManager
+
+============================================================
+SECTION 22 - ANDROID TV / GOOGLE TV / NVIDIA SHIELD / CHROMECAST
+============================================================
+
+Mozilla/5.0 (Linux; Android 12; Chromecast HD) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Linux; Android 14; Google TV Streamer) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 12; SHIELD Android TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; MiBOX4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.129 Safari/537.36
+Mozilla/5.0 (Linux; Android 12; MiTV-MOOQ1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (Linux; Android 12; BRAVIA 4K VH2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+
+============================================================
+SECTION 23 - AMAZON FIRE TV
+============================================================
+
+Mozilla/5.0 (Linux; Android 7.1.2; AFTT) AppleWebKit/537.36 (KHTML, like Gecko) Silk/80.5.3 like Chrome/80.0.3987.162 Safari/537.36
+Mozilla/5.0 (Linux; Android 9; AFTMM) AppleWebKit/537.36 (KHTML, like Gecko) Silk/112.5.1 like Chrome/112.0.5615.136 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; AFTSS) AppleWebKit/537.36 (KHTML, like Gecko) Silk/121.4.6 like Chrome/121.0.6167.143 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; AFTKA) AppleWebKit/537.36 (KHTML, like Gecko) Silk/121.4.6 like Chrome/121.0.6167.143 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; AFTKM) AppleWebKit/537.36 (KHTML, like Gecko) Silk/121.4.6 like Chrome/121.0.6167.143 Safari/537.36
+
+============================================================
+SECTION 24 - ROKU / APPLE TV / SET-TOP BOX
+============================================================
+
+Roku/DVP-12.5 (12.5.0.4178-30)
+Mozilla/5.0 (Roku/DVP-12.5) AppleWebKit/537.36 (KHTML, like Gecko) RokuBrowser/1.0 Safari/537.36
+Roku4640X/DVP-9.10 (519.10E04111A)
+AppleTV6,2/11.1
+AppleTV11,1/15.0
+Mozilla/5.0 (Apple TV; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (Linux; Android 10; STB) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Mozilla/5.0 (Linux; U; Android 9; en-US; SetTopBox) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Safari/537.36
+HbbTV/1.5.1 (+DRM; Sonic; Linux; en) AppleWebKit/537.36
+
+============================================================
+SECTION 25 - PLAYSTATION
+============================================================
+
+Mozilla/5.0 (PlayStation; PlayStation 5/11.40) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 libhttp/11.40 (PlayStation 5)
+Mozilla/5.0 (PlayStation 5) AppleWebKit/605.1.15 (KHTML, like Gecko)
+Mozilla/5.0 (PlayStation 5/SmartTV) AppleWebKit/605.1.15 (KHTML, like Gecko)
+Mozilla/5.0 (PlayStation 4 11.00) AppleWebKit/605.1.15 (KHTML, like Gecko)
+Mozilla/5.0 (PlayStation 4 10.71) AppleWebKit/605.1.15 (KHTML, like Gecko)
+Mozilla/5.0 (PlayStation 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)
+Mozilla/5.0 (PlayStation Vita 3.73) AppleWebKit/537.73 (KHTML, like Gecko) Silk/3.2
+
+============================================================
+SECTION 26 - XBOX
+============================================================
+
+Mozilla/5.0 (Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.6269.94 Safari/537.36
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36 Edg/126.0.2592.68
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series S) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36 Edg/126.0.2592.68
+Mozilla/5.0 (Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Edge/44.19041.4788
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edge/44.18363.8131
+Mozilla/5.0 (Xbox; Xbox 360) AppleWebKit/534.34 (KHTML, like Gecko) Safari/534.34
+
+============================================================
+SECTION 27 - NINTENDO
+============================================================
+
+Mozilla/5.0 (Nintendo Switch; WifiWebAuthApplet) AppleWebKit/609.4 (KHTML, like Gecko) NF/6.0.2.20.5 NintendoBrowser/5.1.0.22474
+Mozilla/5.0 (Nintendo Switch; WebApplet) AppleWebKit/609.4 (KHTML, like Gecko) NF/6.0.2.20.5 NintendoBrowser/5.1.0.22474
+Mozilla/5.0 (Nintendo Switch) AppleWebKit/609.4 (KHTML, like Gecko) NintendoBrowser/5.1.0.22474
+Mozilla/5.0 (Nintendo WiiU) AppleWebKit/536.28 (KHTML, like Gecko) NX/3.0.4.2.12 NintendoBrowser/4.3.2.11274.US
+Mozilla/5.0 (Nintendo WiiU) AppleWebKit/536.30 (KHTML, like Gecko) NX/4.0.0.2.13 NintendoBrowser/4.3.2.11274.EU
+Mozilla/5.0 (Nintendo 3DS; U; ; en) Version/1.7610.US
+Mozilla/5.0 (New Nintendo 3DS; U; ; en) Version/1.7567.US
+Mozilla/5.0 (Nintendo DSi; U; ; en-US) Opera/9.50
+
+============================================================
+SECTION 28 - STEAM DECK / GAMING HANDHELD
+============================================================
+
+Mozilla/5.0 (X11; Linux x86_64; Steam Deck) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.110 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64; Valve Steam Deck) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64; SteamOS) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.99 Safari/537.36
+Mozilla/5.0 (Linux; Android 13; ROG Ally) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.72 Mobile Safari/537.36
+
+============================================================
+SECTION 29 - AUTOMOTIVE / WEARABLE
+============================================================
+
+Mozilla/5.0 (Linux; Android 10; Automotive) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Mozilla/5.0 (Linux; Android 12; Android Automotive) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.65 Safari/537.36
+Mozilla/5.0 (Linux; Android 11; Wear OS) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Mobile Safari/537.36
+Mozilla/5.0 (Watch; CPU WatchOS 10_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/10.0 Mobile/15E148 Safari/604.1
+Mozilla/5.0 (Linux; Tizen 5.5; SAMSUNG SM-R870) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Mobile Safari/537.36
+
+============================================================
+SECTION 30 - WEBVIEW / IN-APP BROWSERS
+============================================================
+
+Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/AP1A.240505.005; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (Linux; Android 14; SM-S928B Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.6613.99 Mobile Safari/537.36
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148
+Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0.0
+Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.6613.99 Mobile Safari/537.36 Instagram 350.0.0.0.0 Android
+Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.6613.99 Mobile Safari/537.36 FB_IAB/FB4A
+
+============================================================
+SECTION 31 - BOTS / CRAWLERS / PREVIEW AGENTS
+============================================================
+
+Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/W.X.Y.Z Safari/537.36
+Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)
+Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)
+DuckDuckBot/1.1; (+http://duckduckgo.com/duckduckbot.html)
+facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)
+Twitterbot/1.0
+LinkedInBot/1.0
+Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)
+Discordbot/2.0
+TelegramBot (like TwitterBot)
+WhatsApp/2.24.10.79 A
+Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)
+Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)
+Mozilla/5.0 (compatible; MJ12bot/v1.4.8; http://mj12bot.com/)
+Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)
+Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)
+
+============================================================
+SECTION 32 - RECOMMENDED REGEX: MOBILE
+============================================================
+
+# Generic mobile
+Mobile|Mobi|Android.*Mobile|iPhone|iPod|Windows Phone|IEMobile|BlackBerry|BB10|Opera Mini|Opera Mobi
+
+# Samsung Galaxy phones
+SAMSUNG.*Mobile|SM-G[0-9A-Z]+|SM-S[0-9A-Z]+|SM-A[0-9A-Z]+|SM-M[0-9A-Z]+|SM-N[0-9A-Z]+|SM-F[0-9A-Z]+
+
+# Samsung Internet mobile
+SamsungBrowser/[0-9.]+.*Mobile
+
+# Samsung foldables
+SM-F7[0-9A-Z]+|SM-F9[0-9A-Z]+|Galaxy Z Fold|Galaxy Z Flip
+
+# Huawei / Honor
+HUAWEI|HONOR|HuaweiBrowser|VOG-[A-Z0-9]+|ANA-[A-Z0-9]+|ELS-[A-Z0-9]+|LIO-[A-Z0-9]+|LYA-[A-Z0-9]+|PRA-[A-Z0-9]+|MAR-[A-Z0-9]+|JNY-[A-Z0-9]+
+
+# Xiaomi / Redmi / POCO / Mi Browser
+Xiaomi|Redmi|POCO|MiuiBrowser|Mi Browser|MIX [0-9A-Z]+|M[0-9]{4}[A-Z0-9]+
+
+# Oppo / OnePlus / Realme
+OPPO|CPH[0-9]+|OnePlus|NE[0-9]{4}|GM[0-9]{4}|IN[0-9]{4}|KB[0-9]{4}|LE[0-9]{4}|RMX[0-9]+|RealmeBrowser
+
+# Vivo / iQOO
+vivo|VIVO|iQOO|V[0-9]{4}[A-Z0-9]*
+
+# Motorola / Lenovo phones
+motorola|Moto G|Moto E|Moto Z|moto g|moto e|XT[0-9]{4}|Lenovo.*Mobile
+
+# Sony / Asus / Nokia / Nothing
+Xperia|SonyEricsson|ASUS_[A-Z0-9]+|ROG Phone|Nokia|Nothing Phone
+
+# Google Pixel phones
+Pixel [0-9]+|Pixel [0-9]+ Pro|Pixel [0-9]+a|Pixel Fold
+
+# Amazon Fire phone / Silk mobile
+Silk/.*Mobile|Kindle.*Mobile
+
+============================================================
+SECTION 33 - RECOMMENDED REGEX: TABLET
+============================================================
+
+# Generic tablet
+Tablet|iPad|Android(?!.*Mobile)|PlayBook
+
+# Samsung tablets
+SM-T[0-9A-Z]+|SM-X[0-9A-Z]+|Galaxy Tab|SAMSUNG.*Tablet
+
+# Samsung Internet tablet, no Mobile token
+SamsungBrowser/[0-9.]+(?!.*Mobile).*Safari
+
+# Lenovo tablets
+Lenovo TB-|Lenovo.*Tablet|TB-[0-9A-Z]+|TB[0-9A-Z]+
+
+# Huawei / Honor tablets
+HUAWEI.*Tablet|HONOR.*Tablet|MediaPad|MatePad|AGS[0-9A-Z-]+|BAH[0-9A-Z-]+|BTV-[A-Z0-9]+
+
+# Xiaomi / Redmi / POCO tablets
+Xiaomi Pad|Redmi Pad|Mi Pad|POCO Pad
+
+# Amazon Fire / Kindle tablets
+Kindle|Silk|KF[A-Z0-9]+|KFTT|KFOT|KFJWI|KFJWA|KFSUWI|KFMAWI|KFTRWI|KFMUWI
+
+# Google / Pixel tablets
+Pixel Tablet|Nexus 7|Nexus 9|Nexus 10
+
+# Other Android tablets
+Nokia T[0-9]+|OPD[0-9]+|Vivo Pad|OPPO Pad|OnePlus Pad|Realme Pad
+
+============================================================
+SECTION 34 - RECOMMENDED REGEX: TOUCH
+============================================================
+
+Touch|Mobile|Mobi|Tablet|iPhone|iPad|iPod|Android|Windows Phone|IEMobile
+SAMSUNG|SM-G|SM-S|SM-A|SM-M|SM-N|SM-F|SM-T|SM-X|SamsungBrowser
+Pixel|Xiaomi|Redmi|POCO|HUAWEI|HONOR|OPPO|CPH|OnePlus|RMX|Realme|vivo|VIVO|iQOO|motorola|Moto|Lenovo|Xperia|Nokia|Nothing Phone|ASUS|ROG Phone
+Kindle|Silk|KF[A-Z0-9]+
+Nintendo Switch|Steam Deck|Wear OS|WatchOS|Android Automotive
+
+============================================================
+SECTION 35 - RECOMMENDED REGEX: TV / CONNECTED TV / SET-TOP BOX
+============================================================
+
+TV|SmartTV|SMART-TV|Smart-TV|HbbTV|NetCast|WebTV|DTV|CE-HTML
+SMART-TV.*Tizen|Tizen.*TV|SamsungBrowser.*TV|SAMSUNG.*TV
+Web0S|webOS|WebAppManager|LG Browser|LG NetCast
+Android TV|GoogleTV|Google TV|BRAVIA|SHIELD Android TV|NVIDIA SHIELD|Chromecast|ADT-[0-9]+
+Fire TV|AFT[A-Z0-9]+|AFTM|AFTT|AFTS|AFTSS|AFTMM|AFTKA|AFTKM|AFTSO|AFTDCT31
+Roku|RokuBrowser|Roku/DVP|RokuOS|Roku OS
+AppleTV|Apple TV|tvOS
+SetTopBox|STB|IPTV|Freebox|Bouygues|OrangeTV|SkyQ|Sky Q|NOW TV|VodafoneTV|Vodafone TV|TIMVISION|Ziggo|KPN|Foxtel|Comcast|Xfinity|VirginMedia
+MiBOX|Mi Box|MiTV|Mi TV|Xiaomi TV|Realtek|Amlogic|Hisense|TCL|VIDAA
+
+============================================================
+SECTION 36 - RECOMMENDED REGEX: CONSOLE
+============================================================
+
+PlayStation|PlayStation 3|PlayStation 4|PlayStation 5|PlayStation Vita|PS3|PS4|PS5|PS Vita
+Xbox|Xbox One|Xbox Series X|Xbox Series S|Xbox 360
+Nintendo Switch|NintendoBrowser|WifiWebAuthApplet|Nintendo WiiU|Nintendo Wii U|Nintendo Wii|Nintendo 3DS|New Nintendo 3DS|Nintendo DSi
+Steam Deck|SteamOS|Valve Steam
+GameConsole|Game Console|Console
+
+============================================================
+SECTION 37 - RECOMMENDED REGEX: DESKTOP
+============================================================
+
+Windows NT|Macintosh|X11|Linux x86_64|CrOS|Ubuntu|Fedora|Debian
+Chrome/[0-9.]+.*Safari/[0-9.]+|Firefox/[0-9.]+|Edg/[0-9.]+|Version/[0-9.]+.*Safari/[0-9.]+
+
+============================================================
+SECTION 38 - RECOMMENDED REGEX: BOT / CRAWLER
+============================================================
+
+Googlebot|bingbot|YandexBot|DuckDuckBot|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|TelegramBot|WhatsApp|AhrefsBot|SemrushBot|MJ12bot|Baiduspider|Applebot|bot|crawler|spider|preview
+
+============================================================
+SECTION 39 - UA CLIENT HINTS NOTES
+============================================================
+
+For modern Chromium browsers, User-Agent reduction means that device model and detailed OS data
+may be missing or generic in the classic User-Agent string.
+
+AMFPlus should combine classic User-Agent parsing with Client Hints when available:
+- Sec-CH-UA
+- Sec-CH-UA-Mobile
+- Sec-CH-UA-Platform
+- Sec-CH-UA-Platform-Version
+- Sec-CH-UA-Model
+- Sec-CH-UA-Arch
+
+Recommended fallback logic:
+- Sec-CH-UA-Mobile = ?1 -> mobile candidate
+- Sec-CH-UA-Mobile = ?0 and platform Android -> tablet / TV / desktop candidate depending on UA tokens
+- Sec-CH-UA-Model present -> use model refinement
+- User-Agent contains Android + Mobile -> mobile
+- User-Agent contains Android without Mobile -> tablet candidate, unless TV/console tokens are found
+- User-Agent contains SMART-TV / Tizen / webOS / Roku / AFT / Android TV -> TV
+- User-Agent contains PlayStation / Xbox / Nintendo / Steam Deck -> console
+
+END OF FILE

@@ -84,6 +84,35 @@ for downstream handlers:
 
 `AMF_FORCE_TO_DESKTOP` may also be set when the full-browser override is used.
 
+## Consuming Values in Applications and Backends
+
+AMFPlus stores its values in Apache's per-request subprocess environment. CGI,
+classic PHP, SSI, and other Apache-integrated runtimes can usually read those
+values directly as environment variables. For example, a PHP page can inspect
+`$_SERVER["AMF_DEVICE_IS_MOBILE"]`, and a CGI script can read
+`AMF_DEVICE_IS_MOBILE` from its process environment.
+
+When Apache is acting as a reverse proxy to an HTTP backend, these internal
+environment variables are not automatically sent over the network. In that
+case, forward the selected values as request headers, then let the backend map
+those headers into its own environment or request context if needed:
+
+```apache
+RequestHeader set X-AMF-Device-Is-Mobile "%{AMF_DEVICE_IS_MOBILE}e" env=AMF_DEVICE_IS_MOBILE
+RequestHeader set X-AMF-Device-Is-Tablet "%{AMF_DEVICE_IS_TABLET}e" env=AMF_DEVICE_IS_TABLET
+RequestHeader set X-AMF-Device-OS "%{AMF_DEVICE_OS}e" env=AMF_DEVICE_OS
+RequestHeader set X-AMF-Browser-Type "%{AMF_BROWSER_TYPE}e" env=AMF_BROWSER_TYPE
+
+ProxyPass "/app" "http://127.0.0.1:8080/"
+ProxyPassReverse "/app" "http://127.0.0.1:8080/"
+```
+
+Many backend frameworks expose incoming HTTP headers through their own request
+environment. For example, CGI-compatible environments commonly expose
+`X-AMF-Device-Is-Mobile` as `HTTP_X_AMF_DEVICE_IS_MOBILE`. The exact mapping
+depends on the backend runtime, so keep the Apache side explicit and document
+which `AMF_*` values are forwarded.
+
 ## Common Use Cases
 
 AMFPlus can be useful in projects where Apache is still the integration point
@@ -98,7 +127,7 @@ between traffic and application code:
 - Logs and analytics pipelines can receive consistent coarse device labels from
   the edge server.
 - Reverse-proxy setups can pass the environment-derived values upstream as
-  headers or routing metadata.
+  headers, routing metadata, or backend environment inputs.
 
 ## Installation
 
@@ -174,6 +203,52 @@ tarball includes a `repository/` directory with versioned defaults:
 For repeatable deployments, copy these files into `AMFHome` as part of your
 configuration management process. Use automatic downloads only when you
 deliberately want the server to refresh these files at startup.
+
+## Custom Detection Rules
+
+Yes, you can improve detection for new or private User-Agent patterns by
+maintaining your own regex rules. AMFPlus reads the repository files from
+`AMFHome`, so you can extend the packaged files and deploy them with your
+normal configuration management process.
+
+The repository files are interpreted as comma-separated POSIX extended regular
+expressions. Each expression can also use `|` alternatives. PCRE-only features
+such as lookahead, lookbehind, and non-capturing groups are not supported by
+Apache's POSIX regex engine in this module. For example, to add a new tablet
+family you could add a pattern to
+`litetabletdetectionPlus.config`, or provide an override directly in Apache:
+
+```apache
+AMFtablet "newtabletbrand|model-x[0-9]+|vendorpad"
+```
+
+The same approach is available for the other device classes:
+
+```apache
+AMFmobile "newphonebrand|vendor-mobile|modelm[0-9]+"
+AMFtouch "newtouchos|touch-enabled-browser"
+AMFtv "newsmarttv|vendor-tv|mediastick"
+```
+
+AMFPlus currently exposes mobile, tablet, touch, TV-like, and desktop flags.
+Console, set-top box, streaming stick, and connected-TV User-Agent strings are
+therefore intentionally covered by the TV-like rules and exposed through
+`AMF_DEVICE_IS_TV`.
+
+Prefer small, explainable rules that match real sample User-Agent strings.
+Before deploying a new rule, test it against known mobile, tablet, desktop, TV,
+and bot traffic so that a broad pattern does not accidentally reclassify too
+much traffic. When possible, add sample coverage to the detection tests in
+`tests/` so future changes do not break your local rules. The bundled test
+harness reads `tests/fixtures/amfplus_useragents_complete.txt`, which contains
+representative User-Agent samples for phones, tablets, desktop browsers,
+connected TVs, consoles, set-top boxes, wearables, automotive browsers, and
+crawlers.
+
+For long-lived deployments, keep local custom rules separate in your deployment
+documentation or automation. That makes it easier to compare them with newer
+AMFPlus repository files and decide which rules should be kept, changed, or
+removed.
 
 ## Compatibility Notes
 
