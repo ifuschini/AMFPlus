@@ -30,9 +30,10 @@ values into Apache's request environment, so downstream code can read them in a
 standard way.
 
 The module can identify whether a request appears to come from a mobile phone,
-tablet, touch device, TV-like device, or desktop browser. It can also expose
-the detected operating system, OS version, browser family, browser version,
-the AMFPlus module version, and the packaged repository version used for regex
+tablet, touch device, TV-like device, console, set-top box, e-reader,
+automotive browser, wearable, bot, or desktop browser. It can also expose the
+detected operating system, OS version, browser family, browser version, the
+AMFPlus module version, and the packaged repository version used for regex
 matching.
 
 AMFPlus 2.0.0 also supports UA Client Hints. When `AMFClientHints on` is set,
@@ -72,6 +73,12 @@ for downstream handlers:
 | `AMF_DEVICE_IS_TABLET` | `true` when the request appears to be from a tablet. |
 | `AMF_DEVICE_IS_TOUCH` | `true` when the device appears to support touch. |
 | `AMF_DEVICE_IS_TV` | `true` for TV-like devices, media sticks, and similar clients. |
+| `AMF_DEVICE_IS_CONSOLE` | `true` when the request appears to be from a game console. |
+| `AMF_DEVICE_IS_SET_TOP_BOX` | `true` when the request appears to be from a set-top box, media streamer, or streaming stick. |
+| `AMF_DEVICE_IS_E_READER` | `true` when the request appears to be from an e-reader. |
+| `AMF_DEVICE_IS_AUTOMOTIVE` | `true` when the request appears to be from an automotive browser. |
+| `AMF_DEVICE_IS_WEARABLE` | `true` when the request appears to be from a wearable browser. |
+| `AMF_DEVICE_IS_BOT` | `true` when the request appears to be from a crawler, bot, or link preview agent. |
 | `AMF_DEVICE_IS_DESKTOP` | `true` when the request is classified as desktop. |
 | `AMF_DEVICE_OS` | Detected operating system name, when available. |
 | `AMF_DEVICE_OS_VERSION` | Detected operating system version, when available. |
@@ -104,6 +111,8 @@ those headers into its own environment or request context if needed:
 ```apache
 RequestHeader set X-AMF-Device-Is-Mobile "%{AMF_DEVICE_IS_MOBILE}e" env=AMF_DEVICE_IS_MOBILE
 RequestHeader set X-AMF-Device-Is-Tablet "%{AMF_DEVICE_IS_TABLET}e" env=AMF_DEVICE_IS_TABLET
+RequestHeader set X-AMF-Device-Is-Console "%{AMF_DEVICE_IS_CONSOLE}e" env=AMF_DEVICE_IS_CONSOLE
+RequestHeader set X-AMF-Device-Is-Bot "%{AMF_DEVICE_IS_BOT}e" env=AMF_DEVICE_IS_BOT
 RequestHeader set X-AMF-Device-OS "%{AMF_DEVICE_OS}e" env=AMF_DEVICE_OS
 RequestHeader set X-AMF-Browser-Type "%{AMF_BROWSER_TYPE}e" env=AMF_BROWSER_TYPE
 
@@ -191,7 +200,9 @@ repository files are versioned with the AMFPlus release.
 | `AMFFullBrowser` | Enables the full-browser override behavior. |
 | `AMFFullBrowserAccessKey` | Query-string key used to force desktop/full-browser behavior. |
 | `AMFProxy`, `AMFProxyUsr`, `AMFProxyPwd` | Optional proxy settings for repository downloads. |
-| `AMFmobile`, `AMFtablet`, `AMFtouch`, `AMFtv` | Override regex values directly from Apache configuration. |
+| `AMFmobile`, `AMFtablet`, `AMFtouch`, `AMFtv` | Override core device-class regex values directly from Apache configuration. |
+| `AMFconsole`, `AMFsettopbox`, `AMFereader` | Override console, set-top box, and e-reader regex values directly from Apache configuration. |
+| `AMFautomotive`, `AMFwearable`, `AMFbot` | Override automotive, wearable, and bot regex values directly from Apache configuration. |
 
 ## Detection Repository
 
@@ -202,6 +213,12 @@ tarball includes a `repository/` directory with versioned defaults:
 - `litetabletdetectionPlus.config`
 - `litetouchdetectionPlus.config`
 - `litetvdetectionPlus.config`
+- `liteconsoledetectionPlus.config`
+- `litesettopboxdetectionPlus.config`
+- `liteereaderdetectionPlus.config`
+- `liteautomotivedetectionPlus.config`
+- `litewearabledetectionPlus.config`
+- `litebotdetectionPlus.config`
 - `VERSION`
 
 For repeatable deployments, copy these files into `AMFHome` as part of your
@@ -232,12 +249,19 @@ The same approach is available for the other device classes:
 AMFmobile "newphonebrand|vendor-mobile|modelm[0-9]+"
 AMFtouch "newtouchos|touch-enabled-browser"
 AMFtv "newsmarttv|vendor-tv|mediastick"
+AMFconsole "newconsole|vendor game browser"
+AMFsettopbox "newstreamstick|vendor stb|mediabox"
+AMFereader "newepaperreader|readerbrowser"
+AMFautomotive "vendor car browser|android automotive"
+AMFwearable "vendorwatch|wear os"
+AMFbot "vendorbot|preview crawler"
 ```
 
-AMFPlus currently exposes mobile, tablet, touch, TV-like, and desktop flags.
-Console, set-top box, streaming stick, and connected-TV User-Agent strings are
-therefore intentionally covered by the TV-like rules and exposed through
-`AMF_DEVICE_IS_TV`.
+AMFPlus exposes dedicated flags for consoles, set-top boxes, e-readers,
+automotive browsers, wearables, and bots. `AMF_DEVICE_IS_TV` remains the
+coarse TV-like compatibility flag: it is set for connected TVs and is also set
+when a console or set-top box rule matches, so older integrations that only
+consume the TV-like signal keep working.
 
 Prefer small, explainable rules that match real sample User-Agent strings.
 Before deploying a new rule, test it against known mobile, tablet, desktop, TV,

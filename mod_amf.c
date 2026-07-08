@@ -55,16 +55,28 @@
 #define ISTABLET_URL "/ifuschini/AMFPlus/master/repository/litetabletdetectionPlus.config"
 #define ISTOUCH_URL  "/ifuschini/AMFPlus/master/repository/litetouchdetectionPlus.config"
 #define ISTV_URL  "/ifuschini/AMFPlus/master/repository/litetvdetectionPlus.config"
+#define ISCONSOLE_URL  "/ifuschini/AMFPlus/master/repository/liteconsoledetectionPlus.config"
+#define ISSETTOPBOX_URL  "/ifuschini/AMFPlus/master/repository/litesettopboxdetectionPlus.config"
+#define ISEREADER_URL  "/ifuschini/AMFPlus/master/repository/liteereaderdetectionPlus.config"
+#define ISAUTOMOTIVE_URL  "/ifuschini/AMFPlus/master/repository/liteautomotivedetectionPlus.config"
+#define ISWEARABLE_URL  "/ifuschini/AMFPlus/master/repository/litewearabledetectionPlus.config"
+#define ISBOT_URL  "/ifuschini/AMFPlus/master/repository/litebotdetectionPlus.config"
 #define IS_MOBILE 0
 #define IS_TABLET 1
 #define IS_TOUCH 2
 #define IS_TV 3
-#define IS_DESKTOP 4
-#define OPERATIVE_SYSTEM 5
-#define OPERATIVE_SYSTEM_VERSION 6
-#define BROWSER_TYPE 7
-#define BROWSER_VERSION 8
-#define NUMBER_OF_AMF_PARAMS 9
+#define IS_CONSOLE 4
+#define IS_SET_TOP_BOX 5
+#define IS_E_READER 6
+#define IS_AUTOMOTIVE 7
+#define IS_WEARABLE 8
+#define IS_BOT 9
+#define IS_DESKTOP 10
+#define OPERATIVE_SYSTEM 11
+#define OPERATIVE_SYSTEM_VERSION 12
+#define BROWSER_TYPE 13
+#define BROWSER_VERSION 14
+#define NUMBER_OF_AMF_PARAMS 15
 
 /* regula expression */
 #define REGEX_ANDROID_VERSION "android ([0-9]\\.[0-9](\\.[0-9])?)"
@@ -90,6 +102,8 @@ int AMFProduction=0;
 int AMFClientHints=0;
 
 char *isMobileString=NULL, *isTabletString=NULL, *isTouchString=NULL, *isTVString=NULL;
+char *isConsoleString=NULL, *isSetTopBoxString=NULL, *isEReaderString=NULL;
+char *isAutomotiveString=NULL, *isWearableString=NULL, *isBotString=NULL;
 char *ProxyUrl=NULL;
 char *ProxyUsr=NULL;
 char *ProxyPwd=NULL;
@@ -106,6 +120,12 @@ static struct regexCache isMobileRegexCache={NULL,0};
 static struct regexCache isTabletRegexCache={NULL,0};
 static struct regexCache isTouchRegexCache={NULL,0};
 static struct regexCache isTVRegexCache={NULL,0};
+static struct regexCache isConsoleRegexCache={NULL,0};
+static struct regexCache isSetTopBoxRegexCache={NULL,0};
+static struct regexCache isEReaderRegexCache={NULL,0};
+static struct regexCache isAutomotiveRegexCache={NULL,0};
+static struct regexCache isWearableRegexCache={NULL,0};
+static struct regexCache isBotRegexCache={NULL,0};
 
 static const char *amf_value_or_nc(const char *value)
 {
@@ -329,6 +349,12 @@ static int handlerAMF(request_rec* r)
         params[IS_TABLET]="false";
         params[IS_TOUCH]="false";
         params[IS_TV]="false";
+        params[IS_CONSOLE]="false";
+        params[IS_SET_TOP_BOX]="false";
+        params[IS_E_READER]="false";
+        params[IS_AUTOMOTIVE]="false";
+        params[IS_WEARABLE]="false";
+        params[IS_BOT]="false";
         params[IS_DESKTOP]="false";
         params[OPERATIVE_SYSTEM]="nc";
         params[OPERATIVE_SYSTEM_VERSION]="nc";
@@ -384,6 +410,12 @@ static int handlerAMF(request_rec* r)
                 int isTablet;
                 int isMobile;
                 int isTV;
+                int isConsole;
+                int isSetTopBox;
+                int isEReader;
+                int isAutomotive;
+                int isWearable;
+                int isBot;
 
                 if (x_user_agent != NULL) {
                     source_user_agent = x_user_agent;
@@ -401,15 +433,41 @@ static int handlerAMF(request_rec* r)
                 }
 
                 //ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL, "ua: %s", string);
-                isTV = checkIsTV(user_agent);
+                isBot = checkIsBot(user_agent);
+                isConsole = checkIsConsole(user_agent);
+                isSetTopBox = checkIsSetTopBox(user_agent);
+                isEReader = checkIsEReader(user_agent);
+                isAutomotive = checkIsAutomotive(user_agent);
+                isWearable = checkIsWearable(user_agent);
+                isTV = checkIsTV(user_agent) == 1 || isConsole == 1 || isSetTopBox == 1;
                 isTablet = 0;
                 isMobile = 0;
-                if (isTV == 0) {
+                if (isBot == 0 && isTV == 0 && isEReader == 0 && isAutomotive == 0 && isWearable == 0) {
                     isTablet = checkIsTablet(user_agent, x_ch_ua_model, x_ch_ua_platform, x_ch_ua_mobile);
                     isMobile = checkIsMobile(user_agent, x_ch_ua_mobile) == 1 || isTablet == 1;
                 }
-                if (isTV == 1) {
+                if (isBot == 1) {
+                    params[IS_BOT]="true";
+                } else if (isTV == 1) {
                     params[IS_TV]="true";
+                    if (isConsole == 1) {
+                        params[IS_CONSOLE]="true";
+                    }
+                    if (isSetTopBox == 1) {
+                        params[IS_SET_TOP_BOX]="true";
+                    }
+                } else if (isEReader == 1) {
+                    params[IS_E_READER]="true";
+                } else if (isAutomotive == 1) {
+                    params[IS_AUTOMOTIVE]="true";
+                    if (checkIsTouch(user_agent)==1) {
+                        params[IS_TOUCH]="true";
+                    }
+                } else if (isWearable == 1) {
+                    params[IS_WEARABLE]="true";
+                    if (checkIsTouch(user_agent)==1) {
+                        params[IS_TOUCH]="true";
+                    }
                 } else if (isMobile == 1)
                 {
                     params[IS_MOBILE]="true";
@@ -438,7 +496,7 @@ static int handlerAMF(request_rec* r)
                 }*/
             }
             if (AMFProduction==1) {
-                const char *stringCookie = apr_psprintf(r->pool, "AMFParams=dummy,%s,%s,%s,%s,%s,%s,%s,%s,%s; path=/; HttpOnly; SameSite=Lax",params[IS_MOBILE],params[IS_TABLET],params[IS_TOUCH],params[IS_TV],params[IS_DESKTOP],params[OPERATIVE_SYSTEM],params[OPERATIVE_SYSTEM_VERSION],params[BROWSER_TYPE],params[BROWSER_VERSION]);
+                const char *stringCookie = apr_psprintf(r->pool, "AMFParams=dummy,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s; path=/; HttpOnly; SameSite=Lax",params[IS_MOBILE],params[IS_TABLET],params[IS_TOUCH],params[IS_TV],params[IS_CONSOLE],params[IS_SET_TOP_BOX],params[IS_E_READER],params[IS_AUTOMOTIVE],params[IS_WEARABLE],params[IS_BOT],params[IS_DESKTOP],params[OPERATIVE_SYSTEM],params[OPERATIVE_SYSTEM_VERSION],params[BROWSER_TYPE],params[BROWSER_VERSION]);
                 apr_table_add(r->headers_out, "Set-Cookie",stringCookie);
                 apr_table_add(r->headers_out, "Set-Cookie","AMFDetect=true; path=/; HttpOnly; SameSite=Lax");
             }
@@ -448,6 +506,12 @@ static int handlerAMF(request_rec* r)
         amf_table_set(e, "AMF_DEVICE_IS_TABLET", params[IS_TABLET]);
         amf_table_set(e, "AMF_DEVICE_IS_TOUCH", params[IS_TOUCH]);
         amf_table_set(e, "AMF_DEVICE_IS_TV", params[IS_TV]);
+        amf_table_set(e, "AMF_DEVICE_IS_CONSOLE", params[IS_CONSOLE]);
+        amf_table_set(e, "AMF_DEVICE_IS_SET_TOP_BOX", params[IS_SET_TOP_BOX]);
+        amf_table_set(e, "AMF_DEVICE_IS_E_READER", params[IS_E_READER]);
+        amf_table_set(e, "AMF_DEVICE_IS_AUTOMOTIVE", params[IS_AUTOMOTIVE]);
+        amf_table_set(e, "AMF_DEVICE_IS_WEARABLE", params[IS_WEARABLE]);
+        amf_table_set(e, "AMF_DEVICE_IS_BOT", params[IS_BOT]);
         amf_table_set(e, "AMF_DEVICE_IS_DESKTOP", params[IS_DESKTOP]);
         amf_table_set(e, "AMF_DEVICE_OS", params[OPERATIVE_SYSTEM] );
         amf_table_set(e, "AMF_DEVICE_OS_VERSION", params[OPERATIVE_SYSTEM_VERSION]);
@@ -679,18 +743,49 @@ int checkIsTouch (char *userAgent) {
     return match_regex_cache(&isTouchRegexCache, userAgent);
 }
 
+int checkIsConsole(char *userAgent)
+{
+    return match_regex_cache(&isConsoleRegexCache, userAgent);
+}
+
+int checkIsSetTopBox(char *userAgent)
+{
+    return match_regex_cache(&isSetTopBoxRegexCache, userAgent);
+}
+
+int checkIsEReader(char *userAgent)
+{
+    return match_regex_cache(&isEReaderRegexCache, userAgent);
+}
+
+int checkIsAutomotive(char *userAgent)
+{
+    return match_regex_cache(&isAutomotiveRegexCache, userAgent);
+}
+
+int checkIsWearable(char *userAgent)
+{
+    return match_regex_cache(&isWearableRegexCache, userAgent);
+}
+
+int checkIsBot(char *userAgent)
+{
+    return match_regex_cache(&isBotRegexCache, userAgent);
+}
+
 static int is_android_tablet_fallback_candidate(const char *userAgent)
 {
     if (userAgent == NULL || strstr(userAgent, "android") == NULL) {
         return 0;
     }
-    if (strstr(userAgent, "mobile") != NULL || checkIsTV((char *)userAgent) == 1) {
-        return 0;
-    }
-    if (strstr(userAgent, "automotive") != NULL ||
-        strstr(userAgent, "wear os") != NULL ||
-        strstr(userAgent, "watchos") != NULL ||
-        strstr(userAgent, "rog ally") != NULL) {
+    if (strstr(userAgent, "mobile") != NULL ||
+        checkIsTV((char *)userAgent) == 1 ||
+        checkIsConsole((char *)userAgent) == 1 ||
+        checkIsSetTopBox((char *)userAgent) == 1 ||
+        checkIsEReader((char *)userAgent) == 1 ||
+        checkIsAutomotive((char *)userAgent) == 1 ||
+        checkIsWearable((char *)userAgent) == 1 ||
+        checkIsBot((char *)userAgent) == 1) {
         return 0;
     }
     return 1;
@@ -930,6 +1025,29 @@ char* readFile(char *nameFile, char *type) {
     return strdup(dummy);
 }
 
+static char *load_detection_config(const char *fileName, const char *downloadUri, const char *type, struct regexCache *cache)
+{
+    char nameFile[MAX_SIZE];
+    char *config;
+
+    snprintf(nameFile,sizeof(nameFile),"%s/%s",HomeDir,fileName);
+#ifdef CURL_SUPPORT
+    if (setDownloadParam==1) {
+        int returnCode=downloadFile(AMF_HOST,(char *)downloadUri,nameFile);
+        if (returnCode == 1) {
+            if (AMFLog==1)
+                printf("Configuration for %s device detection downloaded and saved correctly\n",type);
+        } else {
+            if (AMFLog==1)
+                printf("Configuration for %s device detection downloaded failed, try to take old configuration\n",type);
+        }
+    }
+#endif
+    config=readFile(nameFile,(char *)type);
+    compile_regex_cache(cache, config);
+    return config;
+}
+
 void loadParameters(int flag) {
     int size=0;
     size=strlen(HomeDir);
@@ -940,99 +1058,17 @@ void loadParameters(int flag) {
     setDownloadParam=flag;
     if (AMFLog==1)
         printf ("AMFDownloadParam is correctly setted\n");
-    char nameFile[MAX_SIZE];
-#ifdef CURL_SUPPORT
-    int returnCode=0;
-#endif
-    snprintf(nameFile,sizeof(nameFile),"%s/litemobiledetectionPlus.config",HomeDir);
-#ifdef CURL_SUPPORT
-    if (setDownloadParam==1) {
-        returnCode=downloadFile(AMF_HOST,ISMOBILE_URL,nameFile);
-        if (returnCode == 1) {
-            if (AMFLog==1)
-                printf("Configuration for mobile device detection downloaded and saved correctly\n");
-        } else {
-            if (AMFLog==1)
-                printf("Configuration for mobile device detection downloaded failed, try to take old configuration\n");
-        } 
-        isMobileString=readFile(nameFile,"mobile");
-        compile_regex_cache(&isMobileRegexCache, isMobileString);
-    } else {
-        isMobileString=readFile(nameFile,"mobile");
-        compile_regex_cache(&isMobileRegexCache, isMobileString);
-    }
-#else
-        isMobileString=readFile(nameFile,"mobile");
-        compile_regex_cache(&isMobileRegexCache, isMobileString);
-#endif
-    // Detect tablet devices
-    snprintf(nameFile,sizeof(nameFile),"%s/litetabletdetectionPlus.config",HomeDir);
-#ifdef CURL_SUPPORT
-    if (setDownloadParam==1) {
-        returnCode=downloadFile(AMF_HOST,ISTABLET_URL,nameFile);
-        if (returnCode == 1) {
-            if (AMFLog==1)
-                printf("Configuration for tablet device detection downloaded and saved correctly\n");
-        } else {
-            if (AMFLog==1)
-                printf("Configuration for tablet device detection downloaded failed, try to take old configuration\n");
-			}
-        isTabletString=readFile(nameFile,"tablet");
-        compile_regex_cache(&isTabletRegexCache, isTabletString);
-    } else {
-        isTabletString=readFile(nameFile,"tablet");
-        compile_regex_cache(&isTabletRegexCache, isTabletString);
-    }
-#else
-        isTabletString=readFile(nameFile,"tablet");
-        compile_regex_cache(&isTabletRegexCache, isTabletString);
 
-#endif
-    // Detect touch
-    snprintf(nameFile,sizeof(nameFile),"%s/litetouchdetectionPlus.config",HomeDir);
-#ifdef CURL_SUPPORT
-    if (setDownloadParam==1) {
-        returnCode=downloadFile(AMF_HOST,ISTOUCH_URL,nameFile);
-        if (returnCode == 1) {
-            if (AMFLog==1)
-                printf("Configuration for touch  device detection downloaded and saved correctly\n");
-        } else {
-            if (AMFLog==1)
-                printf("Configuration for touch device detection downloaded failed, try to take old configuration\n");
-			}
-        isTouchString=readFile(nameFile,"touch");
-        compile_regex_cache(&isTouchRegexCache, isTouchString);
-    } else {
-        isTouchString=readFile(nameFile,"touch");
-        compile_regex_cache(&isTouchRegexCache, isTouchString);
-    } 
-#else
-        isTouchString=readFile(nameFile,"touch");
-        compile_regex_cache(&isTouchRegexCache, isTouchString);
-#endif
-    // Detect tv
-    snprintf(nameFile,sizeof(nameFile),"%s/litetvdetectionPlus.config",HomeDir);
-#ifdef CURL_SUPPORT
-    if (setDownloadParam==1) {
-        returnCode=downloadFile(AMF_HOST,ISTV_URL,nameFile);
-        if (returnCode == 1) {
-            if (AMFLog==1)
-                printf("Configuration for tv device detection downloaded and saved correctly\n");
-        } else {
-            if (AMFLog==1)
-                printf("Configuration for tv device detection downloaded failed, try to take old configuration\n");
-				}
-        isTVString=readFile(nameFile,"tv");
-        compile_regex_cache(&isTVRegexCache, isTVString);
-    } else {
-        isTVString=readFile(nameFile,"tv");
-        compile_regex_cache(&isTVRegexCache, isTVString);
-    } 
-#else
-        isTVString=readFile(nameFile,"tv");
-        compile_regex_cache(&isTVRegexCache, isTVString);
-#endif
-    
+    isMobileString=load_detection_config("litemobiledetectionPlus.config", ISMOBILE_URL, "mobile", &isMobileRegexCache);
+    isTabletString=load_detection_config("litetabletdetectionPlus.config", ISTABLET_URL, "tablet", &isTabletRegexCache);
+    isTouchString=load_detection_config("litetouchdetectionPlus.config", ISTOUCH_URL, "touch", &isTouchRegexCache);
+    isTVString=load_detection_config("litetvdetectionPlus.config", ISTV_URL, "tv", &isTVRegexCache);
+    isConsoleString=load_detection_config("liteconsoledetectionPlus.config", ISCONSOLE_URL, "console", &isConsoleRegexCache);
+    isSetTopBoxString=load_detection_config("litesettopboxdetectionPlus.config", ISSETTOPBOX_URL, "set-top box", &isSetTopBoxRegexCache);
+    isEReaderString=load_detection_config("liteereaderdetectionPlus.config", ISEREADER_URL, "e-reader", &isEReaderRegexCache);
+    isAutomotiveString=load_detection_config("liteautomotivedetectionPlus.config", ISAUTOMOTIVE_URL, "automotive", &isAutomotiveRegexCache);
+    isWearableString=load_detection_config("litewearabledetectionPlus.config", ISWEARABLE_URL, "wearable", &isWearableRegexCache);
+    isBotString=load_detection_config("litebotdetectionPlus.config", ISBOT_URL, "bot", &isBotRegexCache);
 }
 
 /* DIRECTIVE HTTPD.CONF */
@@ -1184,6 +1220,42 @@ static const char *set_tv(cmd_parms *cmd, void *dummy, const char *map)
     compile_regex_cache(&isTVRegexCache, isTVString);
     return NULL;
 }
+static const char *set_console(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isConsoleString=(char *) map;
+    compile_regex_cache(&isConsoleRegexCache, isConsoleString);
+    return NULL;
+}
+static const char *set_settopbox(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isSetTopBoxString=(char *) map;
+    compile_regex_cache(&isSetTopBoxRegexCache, isSetTopBoxString);
+    return NULL;
+}
+static const char *set_ereader(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isEReaderString=(char *) map;
+    compile_regex_cache(&isEReaderRegexCache, isEReaderString);
+    return NULL;
+}
+static const char *set_automotive(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isAutomotiveString=(char *) map;
+    compile_regex_cache(&isAutomotiveRegexCache, isAutomotiveString);
+    return NULL;
+}
+static const char *set_wearable(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isWearableString=(char *) map;
+    compile_regex_cache(&isWearableRegexCache, isWearableString);
+    return NULL;
+}
+static const char *set_bot(cmd_parms *cmd, void *dummy, const char *map)
+{
+    isBotString=(char *) map;
+    compile_regex_cache(&isBotRegexCache, isBotString);
+    return NULL;
+}
 
 #ifndef AMF_TEST
 static int amf_per_dir(request_rec * r)
@@ -1244,6 +1316,18 @@ static const command_rec amf_cmds[] = {
                   RSRC_CONF, "Define tablet  param"),
     AP_INIT_TAKE1("AMFtv", set_tv, NULL,
                   RSRC_CONF, "Define tv  param"),
+    AP_INIT_TAKE1("AMFconsole", set_console, NULL,
+                  RSRC_CONF, "Define console param"),
+    AP_INIT_TAKE1("AMFsettopbox", set_settopbox, NULL,
+                  RSRC_CONF, "Define set-top box param"),
+    AP_INIT_TAKE1("AMFereader", set_ereader, NULL,
+                  RSRC_CONF, "Define e-reader param"),
+    AP_INIT_TAKE1("AMFautomotive", set_automotive, NULL,
+                  RSRC_CONF, "Define automotive param"),
+    AP_INIT_TAKE1("AMFwearable", set_wearable, NULL,
+                  RSRC_CONF, "Define wearable param"),
+    AP_INIT_TAKE1("AMFbot", set_bot, NULL,
+                  RSRC_CONF, "Define bot param"),
     {NULL}};
 
 

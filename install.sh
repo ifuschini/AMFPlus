@@ -55,11 +55,23 @@ do
             echo
             echo "AMFmobile from litemobiledetectionPlus.config file"
             echo
-            echo "AMFtouch from litetabletdetectionPlus.config file"
+            echo "AMFtouch from litetouchdetectionPlus.config file"
             echo
-            echo "AMFtablet from litetouchdetectionPlus.config file"
+            echo "AMFtablet from litetabletdetectionPlus.config file"
             echo
             echo "AMFtv from litetvdetectionPlus.config file"
+            echo
+            echo "AMFconsole from liteconsoledetectionPlus.config file"
+            echo
+            echo "AMFsettopbox from litesettopboxdetectionPlus.config file"
+            echo
+            echo "AMFereader from liteereaderdetectionPlus.config file"
+            echo
+            echo "AMFautomotive from liteautomotivedetectionPlus.config file"
+            echo
+            echo "AMFwearable from litewearabledetectionPlus.config file"
+            echo
+            echo "AMFbot from litebotdetectionPlus.config file"
             echo
             echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf only when you explicitly want AMF to refresh repository files."
             echo
