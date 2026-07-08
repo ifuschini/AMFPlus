@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Move Apache module source files into `src/` and update install, test, and packaging paths.
+
 ## 2.0.1 - 08 Jul 2026
 
 - Reduce per-request regex overhead in User-Agent classification, browser parsing, OS detection, and production cookie parsing.

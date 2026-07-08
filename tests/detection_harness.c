@@ -1,7 +1,7 @@
 #define AMF_TEST 1
 #define AMF_NO_CURL_SUPPORT 1
 
-#include "../mod_amf.c"
+#include "../src/mod_amf.c"
 
 static int failures = 0;
 

@@ -184,6 +184,13 @@ sh scripts/package_release.sh 2.0.1
 The generated archive is written to `dist/`, which is intentionally ignored by
 Git.
 
+## Project Layout
+
+- `src/` contains the Apache module source and header files.
+- `rules/` contains the packaged User-Agent detection rule files.
+- `tests/` contains the C detection harness and User-Agent fixtures.
+- `scripts/` contains local maintenance and release packaging helpers.
+
 ## Example Configuration
 
 ```apache

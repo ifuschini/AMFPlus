@@ -39,15 +39,15 @@ do
         CURL_VERSION=$(curl-config --version 2> /dev/null)
         if [ $? -eq 0 ]; then
             echo "Libcurl version is $CURL_VERSION"
-            cp mod_amf.tmpl mod_amf.h
-            if ! run_apxs -c -a -i mod_amf.c -lcurl; then
+            cp src/mod_amf.tmpl src/mod_amf.h
+            if ! run_apxs -c -a -i src/mod_amf.c -lcurl; then
                 echo "apxs failed to compile or install mod_amf with libcurl"
                 exit 1
             fi
         else
             echo "Libcurl not found"
-            cp mod_amf.tmpl mod_amf.h
-            if ! run_apxs -c -a -i -Wc,-DAMF_NO_CURL_SUPPORT mod_amf.c; then
+            cp src/mod_amf.tmpl src/mod_amf.h
+            if ! run_apxs -c -a -i -Wc,-DAMF_NO_CURL_SUPPORT src/mod_amf.c; then
                 echo "apxs failed to compile or install mod_amf"
                 exit 1
             fi
