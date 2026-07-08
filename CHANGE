@@ -3,6 +3,10 @@ Fix build with modern Apache 2.4 headers.
 Harden request parsing, cookie handling, TLS downloads, and installer behavior.
 Add compiled regex caches, stronger UA-CH platform handling, dual-path CI, and release packaging.
 Remove obsolete compiled artifacts and dead legacy helpers.
+Add opt-in Accept-CH/Vary response headers through AMFClientHints.
+Document AMF+ as a legacy compatibility adapter rather than a perfect device detector.
+Add UA and UA-CH sample detection tests.
+Disable repository downloads by default and expose AMF_REPOSITORY_VERSION.
 
 1.4.0.0 - 16 Nov 2018
 The repository now is download from github

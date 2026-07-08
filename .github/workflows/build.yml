@@ -26,3 +26,6 @@ jobs:
           else
             "$APXS" -c -Wc,-Wall -Wc,-DAMF_NO_CURL_SUPPORT mod_amf.c
           fi
+
+      - name: Run detection sample tests
+        run: tests/run_detection_tests.sh

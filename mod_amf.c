@@ -46,6 +46,8 @@
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
 #define AMF_VERSION "2.0.0"
+#define AMF_REPOSITORY_VERSION "2.0.0"
+#define AMF_CLIENT_HINTS_HEADERS "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-Model, Sec-CH-UA-Arch"
 
 #define AMF_HOST "raw.githubusercontent.com"
 #define ISMOBILE_URL "/ifuschini/AMFPlus/master/repository/litemobiledetectionPlus.config"
@@ -77,13 +79,14 @@
 int setFullBrowser=0;
 
 #ifdef CURL_SUPPORT
-int setDownloadParam=1;
+int setDownloadParam=0;
 #else
 int setDownloadParam=0;
 #endif 
 int AMFOn=0;
 int AMFLog=1;
 int AMFProduction=0;
+int AMFClientHints=0;
 
 char *isMobileString=NULL, *isTabletString=NULL, *isTouchString=NULL, *isTVString=NULL;
 char *ProxyUrl=NULL;
@@ -111,6 +114,12 @@ static const char *amf_value_or_nc(const char *value)
 static void amf_table_set(apr_table_t *table, const char *key, const char *value)
 {
     apr_table_set(table, key, amf_value_or_nc(value));
+}
+
+static void set_client_hint_headers(request_rec *r)
+{
+    apr_table_mergen(r->headers_out, "Accept-CH", AMF_CLIENT_HINTS_HEADERS);
+    apr_table_mergen(r->headers_out, "Vary", AMF_CLIENT_HINTS_HEADERS);
 }
 
 static char *trim_token(char *value)
@@ -306,6 +315,15 @@ static int handlerAMF(request_rec* r)
     if (AMFOn == 1) {
         const char *params[NUMBER_OF_AMF_PARAMS];
         apr_table_t *e = r->subprocess_env;
+
+        if (apr_table_get(r->notes, "amfplus_processed") != NULL) {
+            return DECLINED;
+        }
+        apr_table_setn(r->notes, "amfplus_processed", "1");
+        if (AMFClientHints == 1) {
+            set_client_hint_headers(r);
+        }
+
         params[IS_MOBILE]="false";
         params[IS_TABLET]="false";
         params[IS_TOUCH]="false";
@@ -437,6 +455,7 @@ static int handlerAMF(request_rec* r)
         amf_table_set(e, "AMF_CH_UA_PLATFORM_VERSION", x_ch_ua_platform_version);
         amf_table_set(e, "AMF_CH_UA_MOBILE", x_ch_ua_mobile);
         amf_table_set(e, "AMF_VER", AMF_VERSION);
+        amf_table_set(e, "AMF_REPOSITORY_VERSION", AMF_REPOSITORY_VERSION);
         if (setFullBrowser==1) {
             if (r->args) {
                 if (checkQueryStringIsFull (r->args)==1) {
@@ -449,6 +468,7 @@ static int handlerAMF(request_rec* r)
             }
         }
         amf_table_set(e, "AMF_VER", AMF_VERSION);
+        amf_table_set(e, "AMF_REPOSITORY_VERSION", AMF_REPOSITORY_VERSION);
         apr_table_set(r->headers_out, "AMFplus-Ver", AMF_VERSION);
     }
     return DECLINED;
@@ -516,6 +536,35 @@ char *match_regex_string (apr_pool_t *pool, regex_t * r, const char * to_match, 
 }
 
 #ifdef CURL_SUPPORT
+static int is_downloaded_config_valid(const char *fileName)
+{
+    FILE *fp;
+    long size;
+    int first;
+
+    fp = fopen(fileName, "r");
+    if (fp == NULL) {
+        return 0;
+    }
+
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return 0;
+    }
+    size = ftell(fp);
+    if (size <= 0 || fseek(fp, 0, SEEK_SET) != 0) {
+        fclose(fp);
+        return 0;
+    }
+
+    do {
+        first = fgetc(fp);
+    } while (first != EOF && isspace(first));
+    fclose(fp);
+
+    return first != EOF && first != '<';
+}
+
 int downloadFile (char *host,char *URI, char fileName[]) {
     int returnValue=0;
     CURL* handle = curl_easy_init();
@@ -579,7 +628,7 @@ int downloadFile (char *host,char *URI, char fileName[]) {
 
     res=curl_easy_perform(handle);
     fclose(fp);
-    if (res == CURLE_OK && rename(tmpFile, fileName) == 0) {
+    if (res == CURLE_OK && is_downloaded_config_valid(tmpFile) && rename(tmpFile, fileName) == 0) {
         returnValue=1;
     } else {
         remove(tmpFile);
@@ -1019,6 +1068,17 @@ static const char *set_amfproduction(cmd_parms *parms, void *dummy, int flag)
     return NULL;
 }
 
+static const char *set_clientHints(cmd_parms *parms, void *dummy, int flag)
+{
+    AMFClientHints=flag;
+    if (AMFLog==1 && AMFClientHints==1) {
+            printf ("AMF Client Hints response headers are on\n");
+    } else if (AMFLog==1) {
+            printf ("AMF Client Hints response headers are off\n");
+    }
+    return NULL;
+}
+
 static const char *set_fullBrowserKey(cmd_parms *cmd, void *dummy, const char *map)
 {
     int size=0;
@@ -1099,6 +1159,7 @@ static const char *set_tv(cmd_parms *cmd, void *dummy, const char *map)
     return NULL;
 }
 
+#ifndef AMF_TEST
 static int amf_per_dir(request_rec * r)
 {
     return handlerAMF(r);
@@ -1131,6 +1192,8 @@ static const command_rec amf_cmds[] = {
                  RSRC_CONF, "Define read configuration file or parameters for AMF"),
     AP_INIT_FLAG("AMFProduction", set_amfproduction, NULL,
                  RSRC_CONF, "Define if is AMF is set for production environment (increase pereformance)"),
+    AP_INIT_FLAG("AMFClientHints", set_clientHints, NULL,
+                 RSRC_CONF, "Emit Accept-CH and Vary response headers for UA Client Hints"),
     AP_INIT_TAKE1("AMFHome", set_homeDir, NULL,
                   RSRC_CONF, "Define HomeDirectory"),
     AP_INIT_FLAG("AMFFullBrowser", set_fullDesktop, NULL,
@@ -1170,3 +1233,4 @@ module AP_MODULE_DECLARE_DATA amf_module =
     amf_cmds, /* command table */
     register_hooks
 };
+#endif

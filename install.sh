@@ -60,7 +60,7 @@ do
             echo
             echo "AMFtv from litetvdetectionPlus.config file"
             echo
-            echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf and AMF will update automatically every time."
+            echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf only when you explicitly want AMF to refresh repository files."
             echo
         fi
         var=1
