@@ -16,7 +16,7 @@ feature detection, or client-side capability checks. Modern frontends should
 still be built to adapt in the browser. AMFPlus is useful when the server also
 needs a practical first-pass classification.
 
-Current release: 2.0.0. See [CHANGELOG.md](CHANGELOG.md) for the release
+Current release: 2.0.1. See [CHANGELOG.md](CHANGELOG.md) for the release
 history.
 
 ## Architecture
@@ -37,7 +37,7 @@ detected operating system, OS version, browser family, browser version, the
 AMFPlus module version, and the packaged rule set version used for regex
 matching.
 
-AMFPlus 2.0.0 also supports UA Client Hints. When `AMFClientHints on` is set,
+AMFPlus 2.x supports UA Client Hints. When `AMFClientHints on` is set,
 the module emits the `Accept-CH` and `Vary` headers for the Client Hints it can
 use, including platform, platform version, model, architecture, and mobile
 state.
@@ -178,7 +178,7 @@ as binary tarballs in the repository. To build the same archive locally for a
 release or for manual testing, run:
 
 ```sh
-sh scripts/package_release.sh 2.0.0
+sh scripts/package_release.sh 2.0.1
 ```
 
 The generated archive is written to `dist/`, which is intentionally ignored by

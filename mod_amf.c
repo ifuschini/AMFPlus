@@ -46,8 +46,8 @@
 #define BUFFER_SIZE 1024
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
-#define AMF_VERSION "2.0.0"
-#define AMF_REPOSITORY_VERSION "2.0.0"
+#define AMF_VERSION "2.0.1"
+#define AMF_REPOSITORY_VERSION "2.0.1"
 #define AMF_CLIENT_HINTS_HEADERS "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-Model, Sec-CH-UA-Arch"
 
 #define AMF_HOST "raw.githubusercontent.com"
