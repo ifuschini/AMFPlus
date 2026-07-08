@@ -47,17 +47,18 @@
 
 #include "apr_env.h"
 #include "apr_pools.h"
+#include "apr_strings.h"
 
 #define BUFFER_SIZE 1024
 #define MAX_SIZE 10000
 #define MAX_ERROR_MSG 0x1000
 #define AMF_VERSION "1.5.0.0"
 
-#define AMF_HOST "github.com"
-#define ISMOBILE_URL "/ifuschini/AMFPlus/blob/master/repository/litemobiledetectionPlus.config"
-#define ISTABLET_URL "/ifuschini/AMFPlus/blob/master/repository/litetabletdetectionPlus.config"
-#define ISTOUCH_URL  "/ifuschini/AMFPlus/blob/master/repository/litetouchdetectionPlus.config"
-#define ISTV_URL  "/ifuschini/AMFPlus/blob/master/repository/litetvdetectionPlus.config"
+#define AMF_HOST "raw.githubusercontent.com"
+#define ISMOBILE_URL "/ifuschini/AMFPlus/master/repository/litemobiledetectionPlus.config"
+#define ISTABLET_URL "/ifuschini/AMFPlus/master/repository/litetabletdetectionPlus.config"
+#define ISTOUCH_URL  "/ifuschini/AMFPlus/master/repository/litetouchdetectionPlus.config"
+#define ISTV_URL  "/ifuschini/AMFPlus/master/repository/litetvdetectionPlus.config"
 #define IS_MOBILE 0
 #define IS_TABLET 1
 #define IS_TOUCH 2
@@ -77,6 +78,8 @@
 #define REGEX_OSX_VERSION "os x ([0-9]([0-9]?)_([0-9]?)([0-9]?)(_?)([0-9]?)([0-9]?))"
 #define REGEX_BROWSER_TYPE "(firefox|msie|chrome|chromium|safari|edge|seamonkey|opera)\\/(([0-9]?)([0-9]?)([0-9]?)(.?)([0-9]?)([0-9]?)([0-9]?)(.?)([0-9]?)([0-9]?)([0-9]?)(.?)([0-9]?)([0-9]?)([0-9]?)(.?)([0-9]?)([0-9]?)([0-9]?))"
 #define REGEX_BROWSER_TYPE2  "(firefox|msie|chrome|chromium|safari|edge|seamonkey|opera)\\/([0-9](.?)([0-9]?)(.?)([0-9]?))"
+#define MATCH_REGEX_MAX_MATCHES 144
+#define MATCH_REGEX_STRING_MAX_MATCHES 10
 
 int setFullBrowser=0;
 
@@ -91,18 +94,80 @@ int AMFLog=1;
 int AMFReadConfigFile=0;
 int AMFProduction=0;
 
-char *isMobileString, *isTabletString, *isTouchString, *isTVString;
+char *isMobileString=NULL, *isTabletString=NULL, *isTouchString=NULL, *isTVString=NULL;
 char *ProxyUrl=NULL;
 char *ProxyUsr=NULL;
 char *ProxyPwd=NULL;
 char *hostName, *checkHostString;
 char KeyFullBrowser[MAX_SIZE];
 char HomeDir[MAX_SIZE];
+
+static const char *amf_value_or_nc(const char *value)
+{
+    return value != NULL ? value : "nc";
+}
+
+static void amf_table_set(apr_table_t *table, const char *key, const char *value)
+{
+    apr_table_set(table, key, amf_value_or_nc(value));
+}
+
+static char *trim_token(char *value)
+{
+    char *end;
+
+    while (*value && isspace((unsigned char)*value)) {
+        value++;
+    }
+
+    end = value + strlen(value);
+    while (end > value && isspace((unsigned char)*(end - 1))) {
+        end--;
+    }
+    *end = '\0';
+    return value;
+}
+
+static int match_regex_list(const char *regexList, const char *userAgent)
+{
+    char *copy;
+    char *last = NULL;
+    char *token;
+
+    if (regexList == NULL || userAgent == NULL || *regexList == '\0') {
+        return 0;
+    }
+
+    copy = strdup(regexList);
+    if (copy == NULL) {
+        return 0;
+    }
+
+    token = apr_strtok(copy, ",", &last);
+    while (token != NULL) {
+        regex_t r;
+        char *regexText = trim_token(token);
+
+        if (*regexText != '\0' && compile_regex(&r, regexText) == 0) {
+            int matched = match_regex(&r, userAgent) == 0;
+            regfree(&r);
+            if (matched) {
+                free(copy);
+                return 1;
+            }
+        }
+        token = apr_strtok(NULL, ",", &last);
+    }
+
+    free(copy);
+    return 0;
+}
 #pragma mark handler
 static int handlerAMF(request_rec* r)
 {
     if (AMFOn == 1) {
         const char *params[NUMBER_OF_AMF_PARAMS];
+        apr_table_t *e = r->subprocess_env;
         params[IS_MOBILE]="false";
         params[IS_TABLET]="false";
         params[IS_TOUCH]="false";
@@ -122,54 +187,57 @@ static int handlerAMF(request_rec* r)
         const char *x_ch_ua_platform = NULL;
         const char *x_ch_ua_mobile = NULL;
         int foundParam = 0;
-        int n=0;
         if (AMFProduction == 1) {
-            char *cookieParam;
-            cookieParam=get_cookie_device_param(r);
+            char *cookieParam = get_cookie_device_param(r);
             if (strcmp("nc", cookieParam)!=0) {
                 int pos=0;
+                char *last = NULL;
                 char *paramFromCookie;
-                paramFromCookie=strtok (cookieParam,",");
+                paramFromCookie=apr_strtok(cookieParam,",",&last);
                 while (paramFromCookie != NULL)
                 {
-                    if (pos>0) { 
+                    if (pos>0 && pos <= NUMBER_OF_AMF_PARAMS) {
                         params[pos - 1]=paramFromCookie;
                     }
                     pos++;
-                    paramFromCookie = strtok (NULL, ",");
+                    paramFromCookie = apr_strtok(NULL, ",", &last);
                 }
-                foundParam=1;
+                foundParam = pos >= NUMBER_OF_AMF_PARAMS + 1;
             }
         }
         if  (foundParam == 0) {
-            if (apr_table_get(r->headers_in, "User-Agent") != NULL) {
-                if (r->headers_in != NULL)
-                {
-                    userAgent = apr_table_get(r->headers_in, "User-Agent");
-                    x_operamini_phone_ua = apr_table_get(r->headers_in, "X-OperaMini-Phone-Ua");
-                    x_operamini_ua = apr_table_get(r->headers_in, "X-OperaMini-Ua");
-                    x_ch_ua = apr_table_get(r->headers_in, "Sec-Ch-UA");
-                    x_ch_ua_arch = apr_table_get(r->headers_in, "Sec-Ch-UA-Arch");
-                    x_ch_ua_model = apr_table_get(r->headers_in, "Sec-Ch-UA-Model");
-                    x_ch_ua_platform = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform");
-                    x_ch_ua_mobile = apr_table_get(r->headers_in, "Sec-Ch-UA-Mobile");
-                    n++;
+            if (r->headers_in != NULL) {
+                userAgent = apr_table_get(r->headers_in, "User-Agent");
+                x_user_agent = apr_table_get(r->headers_in, "X-User-Agent");
+                x_operamini_phone_ua = apr_table_get(r->headers_in, "X-OperaMini-Phone-Ua");
+                x_operamini_ua = apr_table_get(r->headers_in, "X-OperaMini-Ua");
+                x_ch_ua = apr_table_get(r->headers_in, "Sec-Ch-UA");
+                x_ch_ua_arch = apr_table_get(r->headers_in, "Sec-Ch-UA-Arch");
+                x_ch_ua_model = apr_table_get(r->headers_in, "Sec-Ch-UA-Model");
+                x_ch_ua_platform = apr_table_get(r->headers_in, "Sec-Ch-UA-Platform");
+                x_ch_ua_mobile = apr_table_get(r->headers_in, "Sec-Ch-UA-Mobile");
+            }
+
+            if (userAgent != NULL) {
+                const char *source_user_agent = userAgent;
+                char *user_agent;
+                char *cursor;
+
+                if (x_user_agent != NULL) {
+                    source_user_agent = x_user_agent;
                 }
-                // verify for opera mini browser
-                char user_agent[strlen(apr_table_get(r->headers_in,"User-Agent"))];
-                strcpy(user_agent, apr_table_get(r->headers_in, "User-Agent"));
-               if (x_user_agent) {
-                    strcpy(user_agent,x_user_agent);
+                if (x_operamini_ua != NULL) {
+                    source_user_agent = x_operamini_ua;
                 }
-                if (x_operamini_phone_ua) {
-                    strcpy(user_agent,x_operamini_phone_ua);
+                if (x_operamini_phone_ua != NULL) {
+                    source_user_agent = x_operamini_phone_ua;
                 }
-                int i=0;    
-                while( user_agent[i] ) {
-                    //store back the lower letter to mystr
-                    user_agent[i] = tolower(user_agent[i]);
-                    i++;
-                }     
+
+                user_agent = apr_pstrdup(r->pool, source_user_agent);
+                for (cursor = user_agent; *cursor != '\0'; cursor++) {
+                    *cursor = (char)tolower((unsigned char)*cursor);
+                }
+
                 //ap_log_error(APLOG_MARK, APLOG_ERR, 0, NULL, "ua: %s", string);
                 if (checkIsMobile(user_agent, x_ch_ua_mobile) == 1)
                 {
@@ -181,18 +249,18 @@ static int handlerAMF(request_rec* r)
                     if (checkIsTouch(user_agent)==1) {
                         params[IS_TOUCH]="true";
                     }
-                    params[OPERATIVE_SYSTEM] = getOperativeSystem(user_agent, x_ch_ua_platform);
-                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(user_agent, (char *)params[OPERATIVE_SYSTEM], x_ch_ua_platform);
+                    params[OPERATIVE_SYSTEM] = getOperativeSystem(r->pool, user_agent, x_ch_ua_platform);
+                    params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform);
                 } else {
                     if (checkIsTV(user_agent)==1) {
                         params[IS_TV]="true";
                     } else {
                         params[IS_DESKTOP]="true";
-                        params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(user_agent, x_ch_ua_platform);
-                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(user_agent, (char *)params[OPERATIVE_SYSTEM], x_ch_ua_platform);
+                        params[OPERATIVE_SYSTEM] = getOperativeSystemDesktop(r->pool, user_agent, x_ch_ua_platform);
+                        params[OPERATIVE_SYSTEM_VERSION] = getOperativeSystemVersion(r->pool, user_agent, params[OPERATIVE_SYSTEM], x_ch_ua_platform);
                     } 
                 }
-                struct browserTypeVersion browser=getBrowserVersion(user_agent);
+                struct browserTypeVersion browser=getBrowserVersion(r->pool, user_agent);
                 
                 params[BROWSER_TYPE]=browser.type;
                 params[BROWSER_VERSION]=browser.version;
@@ -203,33 +271,31 @@ static int handlerAMF(request_rec* r)
                 }*/
             }
             if (AMFProduction==1) {
-                char stringCookie[MAX_SIZE];
-                sprintf(stringCookie, "AMFParams=dummy,%s,%s,%s,%s,%s,%s,%s,%s,%s; path=/;",params[IS_MOBILE],params[IS_TABLET],params[IS_TOUCH],params[IS_TV],params[IS_DESKTOP],params[OPERATIVE_SYSTEM],params[OPERATIVE_SYSTEM_VERSION],params[BROWSER_TYPE],params[BROWSER_VERSION]);
+                const char *stringCookie = apr_psprintf(r->pool, "AMFParams=dummy,%s,%s,%s,%s,%s,%s,%s,%s,%s; path=/; HttpOnly; SameSite=Lax",params[IS_MOBILE],params[IS_TABLET],params[IS_TOUCH],params[IS_TV],params[IS_DESKTOP],params[OPERATIVE_SYSTEM],params[OPERATIVE_SYSTEM_VERSION],params[BROWSER_TYPE],params[BROWSER_VERSION]);
                 apr_table_add(r->headers_out, "Set-Cookie",stringCookie);
-                apr_table_add(r->headers_out, "Set-Cookie","AMFDetect=true; path=/;"); 
+                apr_table_add(r->headers_out, "Set-Cookie","AMFDetect=true; path=/; HttpOnly; SameSite=Lax");
             }
         }
-        apr_table_t *e = r->subprocess_env;
-        apr_table_setn(e, "AMF_ID", "mod_amf_detection");
-        apr_table_setn(e, "AMF_DEVICE_IS_MOBILE", params[IS_MOBILE]);
-        apr_table_setn(e, "AMF_DEVICE_IS_TABLET", params[IS_TABLET]);
-        apr_table_setn(e, "AMF_DEVICE_IS_TOUCH", params[IS_TOUCH]);
-        apr_table_setn(e, "AMF_DEVICE_IS_TV", params[IS_TV]);
-        apr_table_setn(e, "AMF_DEVICE_IS_DESKTOP", params[IS_DESKTOP]);
-        apr_table_setn(e, "AMF_DEVICE_OS", params[OPERATIVE_SYSTEM] );
-        apr_table_setn(e, "AMF_DEVICE_OS_VERSION", params[OPERATIVE_SYSTEM_VERSION]);
-        apr_table_setn(e, "AMF_BROWSER_TYPE", params[BROWSER_TYPE]);
-        apr_table_setn(e, "AMF_BROWSER_VERSION", params[BROWSER_VERSION]);
-        apr_table_setn(e, "AMF_CH_UA", x_ch_ua);
-        apr_table_setn(e, "AMF_CH_UA_ARCH", x_ch_ua_arch);
-        apr_table_setn(e, "AMF_CH_UA_MODEL", x_ch_ua_model);
-        apr_table_setn(e, "AMF_CH_UA_PLATFORM", x_ch_ua_platform);
-        apr_table_setn(e, "AMF_CH_UA_MOBILE", x_ch_ua_mobile);
-        apr_table_setn(e, "AMF_VER", AMF_VERSION);
+        amf_table_set(e, "AMF_ID", "mod_amf_detection");
+        amf_table_set(e, "AMF_DEVICE_IS_MOBILE", params[IS_MOBILE]);
+        amf_table_set(e, "AMF_DEVICE_IS_TABLET", params[IS_TABLET]);
+        amf_table_set(e, "AMF_DEVICE_IS_TOUCH", params[IS_TOUCH]);
+        amf_table_set(e, "AMF_DEVICE_IS_TV", params[IS_TV]);
+        amf_table_set(e, "AMF_DEVICE_IS_DESKTOP", params[IS_DESKTOP]);
+        amf_table_set(e, "AMF_DEVICE_OS", params[OPERATIVE_SYSTEM] );
+        amf_table_set(e, "AMF_DEVICE_OS_VERSION", params[OPERATIVE_SYSTEM_VERSION]);
+        amf_table_set(e, "AMF_BROWSER_TYPE", params[BROWSER_TYPE]);
+        amf_table_set(e, "AMF_BROWSER_VERSION", params[BROWSER_VERSION]);
+        amf_table_set(e, "AMF_CH_UA", x_ch_ua);
+        amf_table_set(e, "AMF_CH_UA_ARCH", x_ch_ua_arch);
+        amf_table_set(e, "AMF_CH_UA_MODEL", x_ch_ua_model);
+        amf_table_set(e, "AMF_CH_UA_PLATFORM", x_ch_ua_platform);
+        amf_table_set(e, "AMF_CH_UA_MOBILE", x_ch_ua_mobile);
+        amf_table_set(e, "AMF_VER", AMF_VERSION);
         if (setFullBrowser==1) {
             if (r->args) {
                 if (checkQueryStringIsFull (r->args)==1) {
-                    apr_table_add(r->headers_out, "Set-Cookie","amfFull=true; path=/;");
+                    apr_table_add(r->headers_out, "Set-Cookie","amfFull=true; path=/; HttpOnly; SameSite=Lax");
                     apr_table_add(e, "AMF_FORCE_TO_DESKTOP", "true");
                 }
             }
@@ -237,7 +303,7 @@ static int handlerAMF(request_rec* r)
                 apr_table_add(e, "AMF_FORCE_TO_DESKTOP", "true");
             }
         }
-        apr_table_setn(e, "AMF_VER", AMF_VERSION);
+        amf_table_set(e, "AMF_VER", AMF_VERSION);
         apr_table_set(r->headers_out, "AMFplus-Ver", AMF_VERSION);
     }
     return DECLINED;
@@ -268,11 +334,15 @@ int match_regex (regex_t * r, const char * to_match)
     /* "P" is a pointer into the string which points to the end of the
      previous match. */
     const char * p = to_match;
-    /* "N_matches" is the maximum number of matches allowed. */
-    const int n_matches = 144   ;
     /* "M" contains the matches found. */
-    regmatch_t m[n_matches];
-    int nomatch = regexec (r, p, n_matches, m, 0);
+    regmatch_t m[MATCH_REGEX_MAX_MATCHES];
+    int nomatch;
+
+    if (to_match == NULL) {
+        return 1;
+    }
+
+    nomatch = regexec (r, p, MATCH_REGEX_MAX_MATCHES, m, 0);
     if (nomatch) {
         //printf ("No more matches.\n");
         return 1;
@@ -281,100 +351,98 @@ int match_regex (regex_t * r, const char * to_match)
     }
     return 0;
 }
-char *match_regex_string (regex_t * r, const char * to_match, int matchOS)
+char *match_regex_string (apr_pool_t *pool, regex_t * r, const char * to_match, int matchOS)
 {
-    char returnValue[MAX_SIZE];
     const char * p = to_match;
-    /* "N_matches" is the maximum number of matches allowed. */
-    const int n_matches = 10;
     /* "M" contains the matches found. */
-    regmatch_t m[n_matches];
-    while (1) {
-        int i = 0;
-        int nomatch = regexec (r, p, n_matches, m, 0);
-        if (nomatch) {
-            return "nc";
-        }
-        for (i = 0; i < n_matches; i++) {
-            int start;
-            int finish;
-            if (m[i].rm_so == -1) {
-                break;
-            }
-            start = m[i].rm_so + (p - to_match);
-            finish = m[i].rm_eo + (p - to_match);
-            if (i == matchOS) {
-                sprintf(returnValue, "%.*s", (finish - start), to_match + start);
-                size_t size=strlen(returnValue) + 1;
-                return strndup(returnValue, size);
-            }
-        }
-        p += m[0].rm_eo;
+    regmatch_t m[MATCH_REGEX_STRING_MAX_MATCHES];
+    int nomatch;
+
+    if (pool == NULL || to_match == NULL || matchOS < 0 || matchOS >= MATCH_REGEX_STRING_MAX_MATCHES) {
+        return pool != NULL ? apr_pstrdup(pool, "nc") : "nc";
     }
-    sprintf(returnValue, "nc");
-    size_t size=strlen(returnValue) + 1;
-    return strndup(returnValue, size);
+
+    nomatch = regexec (r, p, MATCH_REGEX_STRING_MAX_MATCHES, m, 0);
+    if (nomatch || m[matchOS].rm_so == -1) {
+        return apr_pstrdup(pool, "nc");
+    }
+
+    return apr_pstrndup(pool, to_match + m[matchOS].rm_so, m[matchOS].rm_eo - m[matchOS].rm_so);
 }
 
 #ifdef CURL_SUPPORT
 int downloadFile (char *host,char *URI, char fileName[]) {
-  int returnValue=0;
-  CURL* handle = curl_easy_init();
-  CURLcode res;
-  char url[BUFFER_SIZE];
-  char tmpFile[BUFFER_SIZE];
-  sprintf(url,"https://%s%s",host,URI);
-  sprintf(tmpFile,"%s.tmp",fileName);
-  curl_easy_setopt( handle, CURLOPT_URL, url ) ;
-  FILE* fp = fopen( tmpFile, "w");
-  if (fp == NULL) {
-			printf("Error to open this file: %s",fileName);
-            exit(1);
-  }
-  
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp) ; 
-  curl_easy_setopt(handle, CURLOPT_VERBOSE, 0);
-  curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1);
-  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
-  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
-  
-   if (ProxyUrl != NULL) {
-	if (AMFLog==1)
-		printf("Proxy is setted \n");
+    int returnValue=0;
+    CURL* handle = curl_easy_init();
+    CURLcode res;
+    char url[BUFFER_SIZE];
+    char tmpFile[BUFFER_SIZE];
+    FILE* fp;
+
+    if (handle == NULL) {
+        return 0;
+    }
+
+    if (snprintf(url, sizeof(url), "https://%s%s", host, URI) >= (int)sizeof(url) ||
+        snprintf(tmpFile, sizeof(tmpFile), "%s.tmp", fileName) >= (int)sizeof(tmpFile)) {
+        curl_easy_cleanup(handle);
+        return 0;
+    }
+
+    fp = fopen(tmpFile, "w");
+    if (fp == NULL) {
+        if (AMFLog==1)
+            printf("Error to open this file: %s\n",fileName);
+        curl_easy_cleanup(handle);
+        return 0;
+    }
+
+    curl_easy_setopt(handle, CURLOPT_URL, url);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);
+    curl_easy_setopt(handle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L);
+    curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT, 15L);
+    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 60L);
+
+    if (ProxyUrl != NULL) {
+        if (AMFLog==1)
+            printf("Proxy is setted \n");
         curl_easy_setopt(handle, CURLOPT_PROXY, ProxyUrl);
-	if (ProxyUsr != NULL) {
+        if (ProxyUsr != NULL) {
+            if (AMFLog==1)
+                printf("ProxyUsr is correctly setted \n");
+            curl_easy_setopt(handle, CURLOPT_PROXYUSERNAME, ProxyUsr);
+        } else {
+            if (AMFLog==1)
+                printf("ProxyUsr is not setted \n");
+        }
+        if (ProxyPwd != NULL) {
+            if (AMFLog==1)
+                printf("ProxyPwd is correctly setted \n");
+            curl_easy_setopt(handle, CURLOPT_PROXYPASSWORD, ProxyPwd);
+        } else {
+            if (AMFLog==1)
+                printf("ProxyPwd is not setted \n");
+        }
+    } else {
         if (AMFLog==1)
-		  printf("ProxyUsr is correctly setted \n");
-		  curl_easy_setopt(handle, CURLOPT_PROXYUSERNAME, ProxyUsr);
-	} else {
-        if (AMFLog==1)
-		  printf("ProxyUsr is not setted \n");	
-	}
-	if (ProxyUsr != NULL) {
-        if (AMFLog==1)
-		  printf("ProxyPwd is correctly setted \n");
-		  curl_easy_setopt(handle, CURLOPT_PROXYPASSWORD, ProxyPwd);
-		} else {
-        if (AMFLog==1)
-		  printf("ProxyPwd is not setted \n");	
-		}
-  } else {
-        if (AMFLog==1)
-			printf("Proxy is not setted \n");	
-  } 
-  
-  res=curl_easy_perform( handle );
-  fclose(fp);
-  if (res == CURLE_OK) {
-	   rename(tmpFile, fileName);
-	   returnValue=1;
-   } else {
-	   remove(tmpFile);	
-   }
-  return returnValue;
- }
- #endif
+            printf("Proxy is not setted \n");
+    }
+
+    res=curl_easy_perform(handle);
+    fclose(fp);
+    if (res == CURLE_OK && rename(tmpFile, fileName) == 0) {
+        returnValue=1;
+    } else {
+        remove(tmpFile);
+    }
+    curl_easy_cleanup(handle);
+    return returnValue;
+}
+#endif
 int socket_connect(char *host, in_port_t port,int check){
     struct hostent *hp;
     struct sockaddr_in addr;
@@ -409,13 +477,10 @@ int socket_connect(char *host, in_port_t port,int check){
 int get_cookie_param(request_rec *r)
 {
     const char *cookies;
-    const char *start_cookie;
     int returnValue=0;
     
     if ((cookies = apr_table_get(r->headers_in, "Cookie"))) {
-        char cookiesCompare[strlen(cookies)];
-        strcpy(cookiesCompare,cookies);
-        if (compare("amfFull=true",cookiesCompare)==1) {
+        if (compare("amfFull=true",cookies)==1) {
             returnValue=1;
         }
         
@@ -424,7 +489,7 @@ int get_cookie_param(request_rec *r)
 }
 
 
-int checkQueryStringIsFull (char *queryString) {
+int checkQueryStringIsFull (const char *queryString) {
     int returnValue=0;
     if (compare("desktop=true",queryString)==1) {
         returnValue=1;
@@ -435,28 +500,7 @@ int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
 {
     int returnValue=0;
     if (ch_ua_mobile == NULL) {
-        char * pch;
-        char * stringApp=NULL;
-        char * copy = malloc(strlen(isMobileString) + 1);
-        strcpy(copy, isMobileString);
-        pch = strtok (copy,",");
-        while (pch != NULL)
-        {
-            regex_t r;
-            if (compile_regex(& r, pch)==0) {
-                if (match_regex(& r, userAgent)==0) {
-                    regfree (& r);
-                    returnValue=1;
-                    break;
-                }
-            }
-            regfree (& r);
-            pch = strtok (NULL, ",");
-        }
-        copy=NULL;
-        pch=NULL;
-        free(copy);
-        free(pch);
+        returnValue = match_regex_list(isMobileString, userAgent);
     } else {
         if (strcmp("?1",ch_ua_mobile) == 0)
             returnValue=1;
@@ -464,262 +508,163 @@ int checkIsMobile(char *userAgent, const char *ch_ua_mobile)
     return returnValue;
 }
 int checkIsTouch (char *userAgent) {
-    int returnValue=0;
-    char * pch;
-    char * copy = malloc(strlen(isTouchString) + 1);
-    strcpy(copy, isTouchString);
-    pch = strtok (copy,",");
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, userAgent)==0) {
-                regfree (& r);
- 				returnValue=1;
-				break;
-           }
-        }
-        regfree (& r);
-        pch = strtok (NULL, ",");
-    }
-	copy=NULL;
-	pch=NULL;
-	free(copy);
-    free(pch); 
-    return returnValue;
+    return match_regex_list(isTouchString, userAgent);
 }
 
 int checkIsTablet(char *userAgent, const char *ch_ua_tablet)
 {
-    int returnValue=0;
-    char * pch;
-    char * copy = malloc(strlen(isTabletString) + 1);
-    strcpy(copy, isTabletString);
-    pch = strtok (copy,",");
-    
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, userAgent)==0) {
-                regfree (& r);
-				returnValue=1;
-				break;
-            }
-        }
-        regfree (& r);
-        pch = strtok (NULL, ",");
-    }
-	copy=NULL;
-	pch=NULL;
-	free(copy);
-    free(pch); 
-    return returnValue;
+    (void)ch_ua_tablet;
+    return match_regex_list(isTabletString, userAgent);
 }
 int checkIsTV (char *userAgent) {
-    int returnValue=0;
-    char * pch;
-    char * copy = malloc(strlen(isTVString) + 1);
-    strcpy(copy, isTVString);
-    pch = strtok (copy,",");   
-    while (pch != NULL)
-    {
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            if (match_regex(& r, userAgent)==0) {
-                regfree (& r);
-				returnValue=1;
-				break;
-            }
-        }
-        regfree (& r);
-        pch = strtok (NULL, ",");
-    }
-	copy=NULL;
-	pch=NULL;
-	free(copy);
-    free(pch); 
-    return returnValue;
+    return match_regex_list(isTVString, userAgent);
 }
-int compare (char *stringToSearch, char *userAgentSearch) {
+int compare (const char *stringToSearch, const char *userAgentSearch) {
     
     int returnValue=0;
-    char *stringCompare;
-    char *firstChar=substring(stringToSearch, 0,1);
-    char *stringCompareFirst=strstr(firstChar,"^");
-    if (stringCompareFirst !=NULL) {
-        if (strlen(stringToSearch) - 1 <= strlen(userAgentSearch)) {
-            char *stringToSearchSub=substring(stringToSearch, 1,strlen(stringToSearch) - 1);
-            char *userAgentCompare=substring(userAgentSearch, 0,strlen(stringToSearchSub));
-            char *firstCompareStartWith=strstr(stringToSearchSub,userAgentCompare);
-            if (firstCompareStartWith != NULL) {
-                returnValue=1;
-            }
-        }
-    } else {
-        stringCompare=strstr(userAgentSearch,stringToSearch);
-        if(stringCompare != NULL) {
+
+    if (stringToSearch == NULL || userAgentSearch == NULL) {
+        return 0;
+    }
+
+    if (stringToSearch[0] == '^') {
+        const char *prefix = stringToSearch + 1;
+        size_t prefix_len = strlen(prefix);
+
+        if (strncmp(userAgentSearch, prefix, prefix_len) == 0) {
             returnValue=1;
         }
+    } else if (strstr(userAgentSearch,stringToSearch) != NULL) {
+        returnValue=1;
     }
     return returnValue;
 }
 #pragma mark get mobile OS
-struct browserTypeVersion getBrowserVersion(char *useragent)
+struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent)
 {
     struct browserTypeVersion browser;
     char pch[MAX_SIZE];
-    sprintf(pch,REGEX_BROWSER_TYPE);
-    browser.type="nc";
-    browser.version="nc";
+    snprintf(pch,sizeof(pch),REGEX_BROWSER_TYPE);
+    browser.type=apr_pstrdup(pool, "nc");
+    browser.version=apr_pstrdup(pool, "nc");
     regex_t r;
     if (compile_regex(& r, pch)==0) {
-        browser.type=match_regex_string(& r, useragent,1);
-        browser.version=match_regex_string(& r, useragent,2);
+        browser.type=match_regex_string(pool, & r, useragent,1);
+        browser.version=match_regex_string(pool, & r, useragent,2);
+        regfree (& r);
         if (strcmp("nc",browser.type)==0) {
             regex_t r2;
-            sprintf(pch,REGEX_BROWSER_TYPE2);
+            snprintf(pch,sizeof(pch),REGEX_BROWSER_TYPE2);
             if (compile_regex(& r2, pch)==0) {
-                browser.type=match_regex_string(& r2, useragent,1);
-                browser.version=match_regex_string(& r2, useragent,2);         
+                browser.type=match_regex_string(pool, & r2, useragent,1);
+                browser.version=match_regex_string(pool, & r2, useragent,2);
+                regfree (& r2);
             }
-            regfree (& r);        
         }
     } 
-    regfree (& r);
     return browser;
 
 }
-char *getOperativeSystemVersion(char *useragent, char *os, const char *ch_ua_platform)
+char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os, const char *ch_ua_platform)
 {
-    char returnValue[MAX_SIZE];
-    sprintf(returnValue, "nc");
     char pch[MAX_SIZE];
     int matchOS=-1;
+    (void)ch_ua_platform;
+
     if (strcmp("android", os)==0) {
-        sprintf(pch,REGEX_ANDROID_VERSION);
+        snprintf(pch,sizeof(pch),REGEX_ANDROID_VERSION);
         matchOS=1;
     } else if (strcmp("ios", os)==0) {
-        sprintf(pch,REGEX_IOS_VERSION);
+        snprintf(pch,sizeof(pch),REGEX_IOS_VERSION);
         matchOS=1;
     } else if (strcmp("windows phone", os)==0) {
-        sprintf(pch,REGEX_WINDOWS_MOBILE_VERSION);
+        snprintf(pch,sizeof(pch),REGEX_WINDOWS_MOBILE_VERSION);
         matchOS=2;
     } else if (strcmp("symbian", os)==0) {
-        sprintf(pch,REGEX_SYMBIANOS_VERSION);
+        snprintf(pch,sizeof(pch),REGEX_SYMBIANOS_VERSION);
         matchOS=1;
     } else if (strcmp("mac", os)==0) {
-        sprintf(pch,REGEX_OSX_VERSION);
+        snprintf(pch,sizeof(pch),REGEX_OSX_VERSION);
         matchOS=1;
     } 
     
     if (matchOS!=-1) {
         regex_t r;
         if (compile_regex(& r, pch)==0) {
-            char *returnMatch=match_regex_string(& r, useragent,matchOS);
-            strcpy(returnValue,returnMatch);
-            size_t size=strlen(returnValue) + 1;
-            return strndup(returnValue, size);
-        } else {
-            sprintf(returnValue, "nc");
+            char *returnMatch=match_regex_string(pool, & r, useragent,matchOS);
+            regfree (& r);
+            return returnMatch;
         }
-        regfree (& r);
     }
-    size_t size=strlen(returnValue) + 1;
-    return strndup(returnValue, size);
+    return apr_pstrdup(pool, "nc");
 }
 char* get_cookie_device_param(request_rec *r)
 {
     const char *cookies;
-    const char *start_cookie;
     char pch[MAX_SIZE];
-    char returnValue[MAX_SIZE];
-    sprintf(pch,"AMFParams=([^;]+)");
+    snprintf(pch,sizeof(pch),"AMFParams=([^;]+)");
     if ((cookies = apr_table_get(r->headers_in, "Cookie"))) {
-        char cookiesCompare[strlen(cookies)];        
-        regex_t r;
-        if (compile_regex(& r, pch)==0) {
-            char *returnMatch=match_regex_string(& r, cookies,1);
-            strcpy(returnValue,returnMatch);
-            //sprintf(returnValue, "%s",cookies);
-            size_t size=strlen(returnValue) + 1;
-            return strndup(returnValue, size);
-        } else {
-            sprintf(returnValue, "nc");
+        regex_t cookie_regex;
+        if (compile_regex(& cookie_regex, pch)==0) {
+            char *returnMatch=match_regex_string(r->pool, & cookie_regex, cookies,1);
+            regfree (& cookie_regex);
+            return returnMatch;
         }
-        regfree (& r);
     }
-    size_t size=strlen(returnValue) + 1;
-    return strndup(returnValue, size);
+    return apr_pstrdup(r->pool, "nc");
 
 }
-char *getOperativeSystem(char *useragent, const char *ch_ua_platform)
+char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_platform)
 {
     //Android ([0-9]\.[0-9](\.[0-9])?)
-    char returnValue[MAX_SIZE];
     char ostypes[MAX_SIZE]="android,iphone|ipad|ipod,windows phone,symbianos,blackberry,kindle";
+    const char *osnames[] = {"android","ios","windows phone","symbian","blackberry","kindle"};
     char *pch;
+    char *last = NULL;
     int osNumber=0;
-    pch = strtok (ostypes,",");
+    (void)ch_ua_platform;
+
+    pch = apr_strtok(ostypes,",",&last);
     while (pch != NULL)
     {
         regex_t r;
         if (compile_regex(& r, pch)==0) {
             if (match_regex(& r, useragent)==0) {
-                if (osNumber==0)
-                    sprintf(returnValue, "android");
-                else if (osNumber==1)
-                    sprintf(returnValue, "ios");
-                else if (osNumber==2)
-                    sprintf(returnValue, "windows phone");
-                else if (osNumber==3)
-                    sprintf(returnValue, "symbian");
-                else if (osNumber==4)
-                    sprintf(returnValue, "blackberry");
-                else if (osNumber==5)
-                    sprintf(returnValue, "kindle");
-                size_t size=strlen(returnValue) + 1;
-                return strndup(returnValue, size);
+                regfree (& r);
+                return apr_pstrdup(pool, osnames[osNumber]);
             }
+            regfree (& r);
         }
         osNumber++;
-        regfree (& r);
-        pch = strtok (NULL, ",");
+        pch = apr_strtok(NULL, ",", &last);
     }
-    sprintf(returnValue, "nc");
-    size_t size=strlen(returnValue) + 1;
-    return strndup(returnValue, size);
+    return apr_pstrdup(pool, "nc");
 }
-char *getOperativeSystemDesktop(char *useragent, const char *ch_ua_platform)
+char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent, const char *ch_ua_platform)
 {
     //Android ([0-9]\.[0-9](\.[0-9])?)
-    char returnValue[MAX_SIZE];
     char ostypes[MAX_SIZE]="windows,mac,linux";
+    const char *osnames[] = {"windows","mac","linux"};
     char *pch;
+    char *last = NULL;
     int osNumber=0;
-    pch = strtok (ostypes,",");
+    (void)ch_ua_platform;
+
+    pch = apr_strtok(ostypes,",",&last);
     while (pch != NULL)
     {
         regex_t r;
         if (compile_regex(& r, pch)==0) {
             if (match_regex(& r, useragent)==0) {
-                if (osNumber==0)
-                    sprintf(returnValue, "windows");
-                else if (osNumber==1)
-                    sprintf(returnValue, "mac");
-                else if (osNumber==2)
-                    sprintf(returnValue, "linux");
-                size_t size=strlen(returnValue) + 1;
-                return strndup(returnValue, size);
+                regfree (& r);
+                return apr_pstrdup(pool, osnames[osNumber]);
             }
+            regfree (& r);
         }
         osNumber++;
-        regfree (& r);
-        pch = strtok (NULL, ",");
+        pch = apr_strtok(NULL, ",", &last);
     }
-    sprintf(returnValue, "nc");
-    size_t size=strlen(returnValue) + 1;
-    return strndup(returnValue, size);
+    return apr_pstrdup(pool, "nc");
 }
 char* readFile(char *nameFile, char *type) {
     FILE *fp;
@@ -727,24 +672,36 @@ char* readFile(char *nameFile, char *type) {
     size_t len = 0;
     ssize_t read;
     char dummy[MAX_SIZE];
-    size_t size = strlen(dummy) + 1;
-    if (AMFReadConfigFile == 1)
-    {
-        fp = fopen(nameFile, "r");
-        if (fp == NULL) {
-            if (AMFLog==1)
-                printf("I couldn't open %s for reading.\n",nameFile );
-                exit(1);
-        } else {
-            while((read = getline(&line, &len, fp)) != -1) {
-                sprintf(dummy,"%s", line);
-            }
-        }
+    size_t used = 0;
+
+    dummy[0] = '\0';
+    fp = fopen(nameFile, "r");
+    if (fp == NULL) {
         if (AMFLog==1)
-            printf("Configuration for %s device loaded correctly\n",type);
-        size = strlen(dummy) + 1;
+            printf("I couldn't open %s for reading.\n",nameFile );
+        return strdup("");
     }
-    return strndup(dummy, size);
+
+    while((read = getline(&line, &len, fp)) != -1) {
+        size_t copy_len = (size_t)read;
+
+        if (used + copy_len >= sizeof(dummy)) {
+            copy_len = sizeof(dummy) - used - 1;
+        }
+        memcpy(dummy + used, line, copy_len);
+        used += copy_len;
+        dummy[used] = '\0';
+
+        if (used == sizeof(dummy) - 1) {
+            break;
+        }
+    }
+    free(line);
+    fclose(fp);
+
+    if (AMFLog==1)
+        printf("Configuration for %s device loaded correctly\n",type);
+    return strdup(dummy);
 }
 
 void loadParameters(int flag) {
@@ -758,10 +715,8 @@ void loadParameters(int flag) {
     if (AMFLog==1)
         printf ("AMFDownloadParam is correctly setted\n");
     char nameFile[MAX_SIZE];
-    char *hostname;
-    sprintf(nameFile,"%s/litemobiledetectionPlus.config",HomeDir);
-    int fd = -1;
 	int returnCode=0;
+    snprintf(nameFile,sizeof(nameFile),"%s/litemobiledetectionPlus.config",HomeDir);
 #ifdef CURL_SUPPORT
     if (setDownloadParam==1) {
         returnCode=downloadFile(AMF_HOST,ISMOBILE_URL,nameFile);
@@ -780,7 +735,7 @@ void loadParameters(int flag) {
         isMobileString=readFile(nameFile,"mobile");
 #endif
     // Detect tablet devices
-    sprintf(nameFile,"%s/litetabletdetectionPlus.config",HomeDir);
+    snprintf(nameFile,sizeof(nameFile),"%s/litetabletdetectionPlus.config",HomeDir);
 #ifdef CURL_SUPPORT
     if (setDownloadParam==1) {
         returnCode=downloadFile(AMF_HOST,ISTABLET_URL,nameFile);
@@ -800,7 +755,7 @@ void loadParameters(int flag) {
 
 #endif
     // Detect touch
-    sprintf(nameFile,"%s/litetouchdetectionPlus.config",HomeDir);
+    snprintf(nameFile,sizeof(nameFile),"%s/litetouchdetectionPlus.config",HomeDir);
 #ifdef CURL_SUPPORT
     if (setDownloadParam==1) {
         returnCode=downloadFile(AMF_HOST,ISTOUCH_URL,nameFile);
@@ -819,17 +774,17 @@ void loadParameters(int flag) {
         isTouchString=readFile(nameFile,"touch");
 #endif
     // Detect tv
-    sprintf(nameFile,"%s/litetvdetectionPlus.config",HomeDir);
+    snprintf(nameFile,sizeof(nameFile),"%s/litetvdetectionPlus.config",HomeDir);
 #ifdef CURL_SUPPORT
     if (setDownloadParam==1) {
         returnCode=downloadFile(AMF_HOST,ISTV_URL,nameFile);
         if (returnCode == 1) {
             if (AMFLog==1)
-                printf("Configuration for touch  device detection downloaded and saved correctly\n");
+                printf("Configuration for tv device detection downloaded and saved correctly\n");
         } else {
             if (AMFLog==1)
-                printf("Configuration for touch device detection downloaded failed, try to take old configuration\n");
-		}
+                printf("Configuration for tv device detection downloaded failed, try to take old configuration\n");
+			}
         isTVString=readFile(nameFile,"tv");
     } else {
         isTVString=readFile(nameFile,"tv");
@@ -904,9 +859,9 @@ static const char *set_amfReadConfigFile(cmd_parms *parms, void *dummy, int flag
 static const char *set_amfproduction(cmd_parms *parms, void *dummy, int flag)
 {
     AMFProduction=flag;
-    if (AMFProduction==1) {
+    if (AMFLog==1 && AMFProduction==1) {
             printf ("AMF is in production mode\n");
-    } else {
+    } else if (AMFLog==1) {
             printf ("AMF is in test mode\n");
     }
     return NULL;
@@ -920,7 +875,7 @@ static const char *set_fullBrowserKey(cmd_parms *cmd, void *dummy, const char *m
         perror("AMFHome is not setted");
         exit(1);
     }
-    sprintf(KeyFullBrowser,"%s",map);
+    snprintf(KeyFullBrowser,sizeof(KeyFullBrowser),"%s",map);
     
     if (AMFLog==1)
         printf ("AMFKeyFullBrowser is %s \nFor access the device to fullbrowser set the link: <url>%s=true\n",KeyFullBrowser,KeyFullBrowser);
@@ -961,7 +916,7 @@ static const char *set_homeDir(cmd_parms *cmd, void *dummy, const char *map)
         printf("*************************************************\n");
         printf ("AMFHome is correctly setted as: %s\n",map);
     }
-    sprintf(HomeDir,"%s",map);
+    snprintf(HomeDir,sizeof(HomeDir),"%s",map);
     // Detect mobile
     return NULL;
 }
@@ -994,20 +949,6 @@ static int amf_post_read_request(request_rec * r)
 {
     return handlerAMF(r);
 }
-static void amf_child_init(apr_pool_t * p, server_rec * s)
-{
-    
-}
-
-static int amf_post_config(apr_pool_t * p, apr_pool_t * plog,
-                           apr_pool_t * ptemp, server_rec * s)
-{
-    return OK;
-}
-/*static void amf_server_init(apr_pool_t * p, server_rec * s)
- {
- 
- } */
 
 ///////////////////////
 static void register_hooks(apr_pool_t *p)
@@ -1015,7 +956,7 @@ static void register_hooks(apr_pool_t *p)
     /* make sure we run before mod_rewrite's handler */
     static const char * const aszSucc[] = {"mod_setenvif.c", "mod_rewrite.c", NULL };
     ap_hook_header_parser(amf_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
-    ap_hook_post_read_request(amf_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
+    ap_hook_post_read_request(amf_post_read_request, NULL, aszSucc, APR_HOOK_MIDDLE);
 }
 #pragma mark commands directive
 static const command_rec amf_cmds[] = {

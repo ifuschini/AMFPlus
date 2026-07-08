@@ -20,9 +20,11 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ctype.h>
+#include <apr_pools.h>
 #include <httpd.h>
 #include <http_config.h>
 #include <http_log.h>
+#include <http_protocol.h>
 #include <regex.h>
 
 #ifndef _mod_amf_h
@@ -36,12 +38,13 @@ struct browserTypeVersion
     char *version;
 };
 
-int compare(char *string, char *userAgent);
+int compare(const char *string, const char *userAgent);
+int compile_regex(regex_t *r, const char *regex_text);
 int checkIsMobile(char *userAgent, const char *ch_ua_mobile);
 int checkIsTablet(char *userAgent, const char *ch_ua_tablet);
 int checkIsTouch(char *userAgent);
 int checkIsTV(char *userAgent);
-int checkQueryStringIsFull(char *queryString);
+int checkQueryStringIsFull(const char *queryString);
 int get_cookie_param(request_rec *r);
 char *get_cookie_device_param(request_rec *r);
 int socket_connect(char *host, in_port_t port, int check);
@@ -51,11 +54,12 @@ int downloadFile(char *host, char *URI, char fileName[]);
 //int socket_connect(char *host, in_port_t port);
 //char *downloadFile (char *URI, char fileName[]);
 void loadParameters(int flag);
-char *getOperativeSystem(char *useragent, const char *ch_ua_platform);
-char *getOperativeSystemDesktop(char *useragent,const char *ch_ua_platform);
-char *getOperativeSystemVersion(char *useragent, char *os,const char *ch_ua_platform);
-struct browserTypeVersion getBrowserVersion(char *useragent);
+char *getOperativeSystem(apr_pool_t *pool, char *useragent, const char *ch_ua_platform);
+char *getOperativeSystemDesktop(apr_pool_t *pool, char *useragent,const char *ch_ua_platform);
+char *getOperativeSystemVersion(apr_pool_t *pool, char *useragent, const char *os,const char *ch_ua_platform);
+struct browserTypeVersion getBrowserVersion(apr_pool_t *pool, char *useragent);
 char *substring(const char *str, size_t begin, size_t len);
-char *match_regex_string(regex_t *r, const char *to_match, int matchOS);
+int match_regex(regex_t *r, const char *to_match);
+char *match_regex_string(apr_pool_t *pool, regex_t *r, const char *to_match, int matchOS);
 
 #endif
