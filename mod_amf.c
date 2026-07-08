@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: AGPL-3.0-or-later
 //mod_amf.c is module for Apache httpd web server for detect mobile devices
 //Copyright (C) 2009-2020,  Idel Fuschini
 //
