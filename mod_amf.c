@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: AGPL-3.0-or-later
 //mod_amf.c is module for Apache httpd web server for detect mobile devices
-//Copyright (C) 2009-2020,  Idel Fuschini
+//Copyright (C) 2009-2026,  Idel Fuschini
 //
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU Affero General Public License as

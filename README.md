@@ -47,4 +47,9 @@ Enjoy AMF+
 
 For more info: http://www.apachemobilefilter.org
 
-Copyrights (c) 2009-2020 apachemobilefilter.org, All Rights Reserved
+## License
+
+Copyright (C) 2009-2026 Idel Fuschini.
+
+AMFPlus is licensed under the GNU Affero General Public License, version 3 or
+later. See `LICENSE` for the full license text.
