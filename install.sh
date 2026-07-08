@@ -51,7 +51,7 @@ do
                 echo "apxs failed to compile or install mod_amf"
                 exit 1
             fi
-            echo "Remember you must manually update the configuration files (downloadable from https://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/):"
+            echo "Remember you must manually update the rule files packaged with AMFPlus:"
             echo
             echo "AMFmobile from litemobiledetectionPlus.config file"
             echo
@@ -73,7 +73,7 @@ do
             echo
             echo "AMFbot from litebotdetectionPlus.config file"
             echo
-            echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf only when you explicitly want AMF to refresh repository files."
+            echo "If you don't want to manually configure it, install libcurl from https://curl.haxx.se/libcurl/ and rerun the AMF installation script. Add AMFDownloadParam on to your httpd.conf only when you explicitly want AMF to refresh rule files."
             echo
         fi
         var=1

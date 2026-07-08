@@ -6,11 +6,13 @@ Remove obsolete compiled artifacts and dead legacy helpers.
 Add opt-in Accept-CH/Vary response headers through AMFClientHints.
 Document AMF+ as a legacy compatibility adapter rather than a perfect device detector.
 Add UA and UA-CH sample detection tests.
-Disable repository downloads by default and expose AMF_REPOSITORY_VERSION.
+Disable automatic rule downloads by default and expose AMF_REPOSITORY_VERSION.
 Extend packaged OEM, console, set-top box, and connected-TV User-Agent regex rules with complete fixture coverage.
 Prioritize TV-like devices before generic mobile matches and add Android-without-Mobile tablet fallback.
 Add explicit AMF_DEVICE_IS_CONSOLE, AMF_DEVICE_IS_SET_TOP_BOX, AMF_DEVICE_IS_E_READER, AMF_DEVICE_IS_AUTOMOTIVE, AMF_DEVICE_IS_WEARABLE, and AMF_DEVICE_IS_BOT environment variables.
-Add AMFconsole, AMFsettopbox, AMFereader, AMFautomotive, AMFwearable, and AMFbot configuration directives with packaged repository files.
+Add AMFconsole, AMFsettopbox, AMFereader, AMFautomotive, AMFwearable, and AMFbot configuration directives with packaged rule files.
+Move generated release tarballs out of source control and add a local package script for GitHub Releases.
+Rename packaged regex directory from repository/ to rules/.
 
 1.4.0.0 - 16 Nov 2018
 The repository now is download from github

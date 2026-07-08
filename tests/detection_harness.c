@@ -21,19 +21,19 @@ static void assert_string(const char *name, const char *actual, const char *expe
     }
 }
 
-static void load_repository_rules(void)
+static void load_detection_rules(void)
 {
     AMFLog = 0;
-    set_mobile(NULL, NULL, readFile("repository/litemobiledetectionPlus.config", "mobile"));
-    set_tablet(NULL, NULL, readFile("repository/litetabletdetectionPlus.config", "tablet"));
-    set_touch(NULL, NULL, readFile("repository/litetouchdetectionPlus.config", "touch"));
-    set_tv(NULL, NULL, readFile("repository/litetvdetectionPlus.config", "tv"));
-    set_console(NULL, NULL, readFile("repository/liteconsoledetectionPlus.config", "console"));
-    set_settopbox(NULL, NULL, readFile("repository/litesettopboxdetectionPlus.config", "set-top box"));
-    set_ereader(NULL, NULL, readFile("repository/liteereaderdetectionPlus.config", "e-reader"));
-    set_automotive(NULL, NULL, readFile("repository/liteautomotivedetectionPlus.config", "automotive"));
-    set_wearable(NULL, NULL, readFile("repository/litewearabledetectionPlus.config", "wearable"));
-    set_bot(NULL, NULL, readFile("repository/litebotdetectionPlus.config", "bot"));
+    set_mobile(NULL, NULL, readFile("rules/litemobiledetectionPlus.config", "mobile"));
+    set_tablet(NULL, NULL, readFile("rules/litetabletdetectionPlus.config", "tablet"));
+    set_touch(NULL, NULL, readFile("rules/litetouchdetectionPlus.config", "touch"));
+    set_tv(NULL, NULL, readFile("rules/litetvdetectionPlus.config", "tv"));
+    set_console(NULL, NULL, readFile("rules/liteconsoledetectionPlus.config", "console"));
+    set_settopbox(NULL, NULL, readFile("rules/litesettopboxdetectionPlus.config", "set-top box"));
+    set_ereader(NULL, NULL, readFile("rules/liteereaderdetectionPlus.config", "e-reader"));
+    set_automotive(NULL, NULL, readFile("rules/liteautomotivedetectionPlus.config", "automotive"));
+    set_wearable(NULL, NULL, readFile("rules/litewearabledetectionPlus.config", "wearable"));
+    set_bot(NULL, NULL, readFile("rules/litebotdetectionPlus.config", "bot"));
 }
 
 static void lowercase(char *value)
@@ -291,7 +291,7 @@ int main(void)
     assert_string("platform version from client hint", getOperativeSystemVersion(pool, "mozilla/5.0", "android", "\"14.0.0\""), "14.0.0");
     assert_string("ios os from user-agent", getOperativeSystem(pool, "mozilla/5.0 iphone os 17_1", NULL), "ios");
 
-    load_repository_rules();
+    load_detection_rules();
 
     assert_true("samsung galaxy s chrome is mobile",
                 checkIsMobile("mozilla/5.0 (linux; android 15; sm-s938b) applewebkit/537.36 (khtml, like gecko) chrome/137.0.7151.68 mobile safari/537.36", NULL) == 1);

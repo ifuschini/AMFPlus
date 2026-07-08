@@ -1,5 +1,6 @@
 
 compile_for_me.sh
+.DS_Store
 .libs/mod_amf.a
 *.la
 *.lai
@@ -8,3 +9,5 @@ compile_for_me.sh
 *.slo
 *.lo
 *.komodoproject
+dist/
+distributions/*.tar.gz

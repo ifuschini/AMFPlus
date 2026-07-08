@@ -19,7 +19,7 @@ This file contains a broad representative dataset useful for testing AMFPlus det
 - e-readers
 - automotive and wearable browsers
 - bots and crawlers
-- suggested regex patterns for AMFPlus repository files
+- suggested regex patterns for AMFPlus rule files
 
 Recommended AMFPlus classification priority:
 1. Bot / crawler

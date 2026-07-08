@@ -34,7 +34,7 @@ The module can identify whether a request appears to come from a mobile phone,
 tablet, touch device, TV-like device, console, set-top box, e-reader,
 automotive browser, wearable, bot, or desktop browser. It can also expose the
 detected operating system, OS version, browser family, browser version, the
-AMFPlus module version, and the packaged repository version used for regex
+AMFPlus module version, and the packaged rule set version used for regex
 matching.
 
 AMFPlus 2.0.0 also supports UA Client Hints. When `AMFClientHints on` is set,
@@ -92,7 +92,7 @@ for downstream handlers:
 | `AMF_CH_UA_PLATFORM_VERSION` | Raw `Sec-CH-UA-Platform-Version` value, or `nc` when not provided. |
 | `AMF_CH_UA_MOBILE` | Raw `Sec-CH-UA-Mobile` value, or `nc` when not provided. |
 | `AMF_VER` | AMFPlus module version. |
-| `AMF_REPOSITORY_VERSION` | Version of the packaged regex repository. |
+| `AMF_REPOSITORY_VERSION` | Version of the packaged regex rule set. |
 
 `AMF_FORCE_TO_DESKTOP` may also be set when the full-browser override is used.
 
@@ -159,9 +159,9 @@ between traffic and application code:
    installer will ask for its path.
 
 3. Configure Apache with an `AMFHome` directory where AMFPlus can read its
-   regex repository files.
+   regex rule files.
 
-4. Copy the files from `repository/` into your configured `AMFHome` directory,
+4. Copy the files from `rules/` into your configured `AMFHome` directory,
    or enable `AMFDownloadParam on` if you explicitly want AMFPlus to refresh
    them over HTTPS.
 
@@ -170,6 +170,19 @@ between traffic and application code:
    ```sh
    apachectl restart
    ```
+
+## Release Packaging
+
+Release archives are published through GitHub Releases instead of being stored
+as binary tarballs in the repository. To build the same archive locally for a
+release or for manual testing, run:
+
+```sh
+sh scripts/package_release.sh 2.0.0
+```
+
+The generated archive is written to `dist/`, which is intentionally ignored by
+Git.
 
 ## Example Configuration
 
@@ -185,30 +198,30 @@ the module. Keep it off if another layer already manages Client Hints or cache
 variation.
 
 `AMFDownloadParam` is off by default. Enable it only when you explicitly want
-the module to refresh regex files from the configured repository. The packaged
-repository files are versioned with the AMFPlus release.
+the module to refresh regex files from the configured rules source. The
+packaged rule files are versioned with the AMFPlus release.
 
 ## Configuration Directives
 
 | Directive | Purpose |
 | --- | --- |
-| `AMFHome` | Directory containing AMFPlus repository configuration files. |
+| `AMFHome` | Directory containing AMFPlus rule configuration files. |
 | `AMFActivate` | Enables or disables AMFPlus detection. |
 | `AMFClientHints` | Emits UA-CH request headers through `Accept-CH` and cache variation through `Vary`. |
-| `AMFDownloadParam` | Enables optional repository refresh over HTTPS. Disabled by default. |
+| `AMFDownloadParam` | Enables optional rule refresh over HTTPS. Disabled by default. |
 | `AMFLog` | Enables startup and configuration logging. |
 | `AMFProduction` | Stores detection values in cookies to avoid repeating full detection work on later requests. |
 | `AMFFullBrowser` | Enables the full-browser override behavior. |
 | `AMFFullBrowserAccessKey` | Query-string key used to force desktop/full-browser behavior. |
-| `AMFProxy`, `AMFProxyUsr`, `AMFProxyPwd` | Optional proxy settings for repository downloads. |
+| `AMFProxy`, `AMFProxyUsr`, `AMFProxyPwd` | Optional proxy settings for rule downloads. |
 | `AMFmobile`, `AMFtablet`, `AMFtouch`, `AMFtv` | Override core device-class regex values directly from Apache configuration. |
 | `AMFconsole`, `AMFsettopbox`, `AMFereader` | Override console, set-top box, and e-reader regex values directly from Apache configuration. |
 | `AMFautomotive`, `AMFwearable`, `AMFbot` | Override automotive, wearable, and bot regex values directly from Apache configuration. |
 
-## Detection Repository
+## Detection Rules
 
 AMFPlus uses regex configuration files for device-class matching. The release
-tarball includes a `repository/` directory with versioned defaults:
+tarball includes a `rules/` directory with versioned defaults:
 
 - `litemobiledetectionPlus.config`
 - `litetabletdetectionPlus.config`
@@ -229,11 +242,11 @@ deliberately want the server to refresh these files at startup.
 ## Custom Detection Rules
 
 Yes, you can improve detection for new or private User-Agent patterns by
-maintaining your own regex rules. AMFPlus reads the repository files from
+maintaining your own regex rules. AMFPlus reads the rule files from
 `AMFHome`, so you can extend the packaged files and deploy them with your
 normal configuration management process.
 
-The repository files are interpreted as comma-separated POSIX extended regular
+The rule files are interpreted as comma-separated POSIX extended regular
 expressions. Each expression can also use `|` alternatives. PCRE-only features
 such as lookahead, lookbehind, and non-capturing groups are not supported by
 Apache's POSIX regex engine in this module. For example, to add a new tablet
@@ -276,7 +289,7 @@ crawlers.
 
 For long-lived deployments, keep local custom rules separate in your deployment
 documentation or automation. That makes it easier to compare them with newer
-AMFPlus repository files and decide which rules should be kept, changed, or
+AMFPlus rule files and decide which rules should be kept, changed, or
 removed.
 
 ## Compatibility Notes

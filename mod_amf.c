@@ -51,16 +51,16 @@
 #define AMF_CLIENT_HINTS_HEADERS "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-Model, Sec-CH-UA-Arch"
 
 #define AMF_HOST "raw.githubusercontent.com"
-#define ISMOBILE_URL "/ifuschini/AMFPlus/master/repository/litemobiledetectionPlus.config"
-#define ISTABLET_URL "/ifuschini/AMFPlus/master/repository/litetabletdetectionPlus.config"
-#define ISTOUCH_URL  "/ifuschini/AMFPlus/master/repository/litetouchdetectionPlus.config"
-#define ISTV_URL  "/ifuschini/AMFPlus/master/repository/litetvdetectionPlus.config"
-#define ISCONSOLE_URL  "/ifuschini/AMFPlus/master/repository/liteconsoledetectionPlus.config"
-#define ISSETTOPBOX_URL  "/ifuschini/AMFPlus/master/repository/litesettopboxdetectionPlus.config"
-#define ISEREADER_URL  "/ifuschini/AMFPlus/master/repository/liteereaderdetectionPlus.config"
-#define ISAUTOMOTIVE_URL  "/ifuschini/AMFPlus/master/repository/liteautomotivedetectionPlus.config"
-#define ISWEARABLE_URL  "/ifuschini/AMFPlus/master/repository/litewearabledetectionPlus.config"
-#define ISBOT_URL  "/ifuschini/AMFPlus/master/repository/litebotdetectionPlus.config"
+#define ISMOBILE_URL "/ifuschini/AMFPlus/master/rules/litemobiledetectionPlus.config"
+#define ISTABLET_URL "/ifuschini/AMFPlus/master/rules/litetabletdetectionPlus.config"
+#define ISTOUCH_URL  "/ifuschini/AMFPlus/master/rules/litetouchdetectionPlus.config"
+#define ISTV_URL  "/ifuschini/AMFPlus/master/rules/litetvdetectionPlus.config"
+#define ISCONSOLE_URL  "/ifuschini/AMFPlus/master/rules/liteconsoledetectionPlus.config"
+#define ISSETTOPBOX_URL  "/ifuschini/AMFPlus/master/rules/litesettopboxdetectionPlus.config"
+#define ISEREADER_URL  "/ifuschini/AMFPlus/master/rules/liteereaderdetectionPlus.config"
+#define ISAUTOMOTIVE_URL  "/ifuschini/AMFPlus/master/rules/liteautomotivedetectionPlus.config"
+#define ISWEARABLE_URL  "/ifuschini/AMFPlus/master/rules/litewearabledetectionPlus.config"
+#define ISBOT_URL  "/ifuschini/AMFPlus/master/rules/litebotdetectionPlus.config"
 #define IS_MOBILE 0
 #define IS_TABLET 1
 #define IS_TOUCH 2
@@ -1300,11 +1300,11 @@ static const command_rec amf_cmds[] = {
                   RSRC_CONF, "Define the accesskey for your fullbrowser"),
 #ifdef CURL_SUPPORT
     AP_INIT_TAKE1("AMFProxy", set_proxy, NULL,
-                  RSRC_CONF, "Define proxy for download repository"),
+                  RSRC_CONF, "Define proxy for downloading rules"),
     AP_INIT_TAKE1("AMFProxyUsr", set_proxy_usr, NULL,
-                  RSRC_CONF, "Define proxy username for download repository"),
+                  RSRC_CONF, "Define proxy username for downloading rules"),
     AP_INIT_TAKE1("AMFProxyPwd", set_proxy_pwd, NULL,
-                  RSRC_CONF, "Define proxy password for download repository"),
+                  RSRC_CONF, "Define proxy password for downloading rules"),
     AP_INIT_FLAG("AMFDownloadParam", set_downloadParam, NULL,
                  RSRC_CONF, "Define if you want to download param"),
 #endif
