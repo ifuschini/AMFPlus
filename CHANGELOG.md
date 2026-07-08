@@ -1,0 +1,117 @@
+# Changelog
+
+## 2.0.0 - 08 Jul 2026
+
+- Fix build with modern Apache 2.4 headers.
+- Harden request parsing, cookie handling, TLS downloads, and installer behavior.
+- Add compiled regex caches, stronger UA-CH platform handling, dual-path CI, and release packaging.
+- Remove obsolete compiled artifacts and dead legacy helpers.
+- Add opt-in Accept-CH/Vary response headers through `AMFClientHints`.
+- Document AMF+ as a legacy compatibility adapter rather than a perfect device detector.
+- Add UA and UA-CH sample detection tests.
+- Disable repository downloads by default and expose `AMF_REPOSITORY_VERSION`.
+- Extend packaged OEM, console, set-top box, and connected-TV User-Agent regex rules with complete fixture coverage.
+- Prioritize TV-like devices before generic mobile matches and add Android-without-Mobile tablet fallback.
+- Add explicit `AMF_DEVICE_IS_CONSOLE`, `AMF_DEVICE_IS_SET_TOP_BOX`, `AMF_DEVICE_IS_E_READER`, `AMF_DEVICE_IS_AUTOMOTIVE`, `AMF_DEVICE_IS_WEARABLE`, and `AMF_DEVICE_IS_BOT` environment variables.
+- Add `AMFconsole`, `AMFsettopbox`, `AMFereader`, `AMFautomotive`, `AMFwearable`, and `AMFbot` configuration directives with packaged repository files.
+
+## 1.4.0.0 - 16 Nov 2018
+
+- The repository now is download from github.
+
+## 1.3.2.2 - 16 Nov 2017
+
+- Fix bug for user_agent string.
+
+## 1.3.2.1 - 1 Nov 2016
+
+- Fix bug when retrieve data when AMFProduction mode is on.
+
+## 1.3.2 - 30 Oct 2016
+
+- Add AMFProduction (on/off) for increase performance, AMF detect one time the other connection store on client (cookie) the info.
+- Add AMF_BROWSER_TYPE for detect browser.
+- Add AMF_BROWSER_VERSION for detect browser version.
+- Deprecate AMF_DEVICE_MOBILE_OS now is AMF_DEVICE_OS.
+- Deprecate AMF_DEVICE_MOBILE_OS_VERSION now is AMF_DEVICE_OS_VERSION (in this verision extract the version only for mobile).
+
+## 1.3.1 - 30 Sep 2016
+
+- Fix bug for detect the correct number version for iOS device.
+
+## 1.3.0 - 07 Jun 2016
+
+- Add AMFtv on httpd configuration file to put directly into from the regular expression for detect mobile devices (http://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/litetvdetectionPlus.config/download).
+- Add AMF_DEVICE_IS_DESKTOP detect if is Desktop (boolean).
+- Add AMF_DEVICE_IS_TV detect if is a smarttv or chrome key or Apple TV and similar (boolean).
+
+## 1.2.9 - 23 Apr 2016
+
+- Fixed bug for download repository through proxy.
+
+## 1.2.8 - 29 Nov 2015
+
+- Fixed bugs (tahnks to Dima Kozak) (ref. https://groups.google.com/forum/#!topic/amf-device-detection/JCvyS-asOuE).
+- Change type of connection now need libcurl (normally is already on linux distribution).
+- Add AMFProxy url (http://<host>:<port>) for download repository through proxy.
+- Add AMFProxyUsr set the username for proxy.
+- Add AMFProxyPwd set the password for proxy.
+
+## 1.2.7 - 04 Nov 2015
+
+- Fixed several bugs.
+- Add AMFmobile on httpd configuration file to put directly into from the regular expression for detect mobile devices (http://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/litemobiledetectionPlus.config/download).
+- Add AMFtouch on httpd configuration file to put directly into from the regular expression for detect mobile devices (http://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/litemobiledetectionPlus.config/download).
+- Add AMFtablet on httpd configuration file to put directly into from the regular expression for detect mobile devices (http://sourceforge.net/projects/mobilefilter/files/AMFPlusRepository/litemobiledetectionPlus.config/download).
+
+## 1.2.6 - 09 Oct 2015
+
+- Change the name of file to search.
+
+## 1.2.5 - 09 Sep 2015
+
+- Search to several servers for download AMF repository.
+
+## 1.2.4 - 16 Aug 2015
+
+- Change the name server where download the repository (mirroring problem).
+- Fix minor bugs.
+
+## 1.2.3 - 3 Aug 2015
+
+- Fix bug for potential memory leak, thanks Alessandro Carlo Chirico.
+
+## 1.2.2 - 1 Aug 2015
+
+- Change server for download the repository (sourceforge the server provider).
+
+## 1.2.1 - 12 Jun 2015
+
+- Fix bug for empty user agent detection - thanks Peter Baumann.
+- Change server for download the repository.
+
+## 1.2.0 - 01 Nov 2014
+
+- Add AMFLog (on/off) for output log on startup suggested by Ali Nebi.
+- Add AMF_DEVICE_MOBILE_OS detect operative system of mobile devices.
+- Add AMF_DEVICE_MOBILE_OS_VERSION detect operative system version of mobile device.
+
+## 1.1.1 - 03 Oct 2014
+
+- Add AMFDownloadParam (on/off) suggested by Ali Nebi.
+- Add AMFActivate (on/off) for activate AMF in configuration file.
+- Supports regex.
+
+## 1.1.0 - 20 Jul 2014
+
+- Fixed bugs (thanks to John Svazic) (ref. https://groups.google.com/forum/#!topic/amf-device-detection/5yPdP-zUMlM).
+- Supports regex.
+
+## 1.0.1 - 09 feb 2014
+
+- Accept regular expression.
+- Increase performance.
+
+## 1.0.0 - 31 jan 2014
+
+- The first version the adventure is started.

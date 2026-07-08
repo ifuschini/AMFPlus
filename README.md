@@ -16,7 +16,8 @@ feature detection, or client-side capability checks. Modern frontends should
 still be built to adapt in the browser. AMFPlus is useful when the server also
 needs a practical first-pass classification.
 
-Current release: 2.0.0
+Current release: 2.0.0. See [CHANGELOG.md](CHANGELOG.md) for the release
+history.
 
 ## Architecture
 
