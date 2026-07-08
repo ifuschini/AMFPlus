@@ -18,6 +18,10 @@ needs a practical first-pass classification.
 
 Current release: 2.0.0
 
+## Architecture
+
+![AMFPlus architecture](images/amf_architecture.png)
+
 ## What AMFPlus Does
 
 For every request handled by Apache, AMFPlus can detect broad device classes
